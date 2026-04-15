@@ -59,7 +59,7 @@ main{padding:16px;max-width:480px;margin:0 auto;display:flex;flex-direction:colu
 .btn-main{
   flex:1;padding:13px;border-radius:12px;border:none;cursor:pointer;
   background:linear-gradient(135deg,var(--red),var(--orange));
-  color:white;font-size:15px;font-weight:700;transition:opacity .2s;
+  color:white;font-size:15px;font-weight:700;
 }
 .btn-reset{
   padding:13px 16px;border-radius:12px;border:1px solid var(--border);
@@ -76,7 +76,7 @@ main{padding:16px;max-width:480px;margin:0 auto;display:flex;flex-direction:colu
   aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;
   align-items:center;justify-content:center;font-size:9px;font-weight:700;
   color:rgba(255,255,255,.9);text-align:center;line-height:1.2;
-  border:1.5px solid rgba(255,255,255,.07);transition:background .3s;
+  border:1.5px solid rgba(255,255,255,.07);
 }
 .cell .sc{font-size:11px;font-weight:900;margin-top:1px;}
 .score-wrap{padding:16px;}
@@ -86,7 +86,7 @@ main{padding:16px;max-width:480px;margin:0 auto;display:flex;flex-direction:colu
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   border:3px solid var(--border);transition:border-color .4s;
 }
-.score-num{font-size:24px;font-weight:900;line-height:1;transition:color .4s;}
+.score-num{font-size:24px;font-weight:900;line-height:1;}
 .score-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
 .score-info h3{font-size:18px;font-weight:800;margin-bottom:3px;}
 .score-info p{font-size:12px;color:var(--muted);line-height:1.5;}
@@ -100,7 +100,7 @@ main{padding:16px;max-width:480px;margin:0 auto;display:flex;flex-direction:colu
 .bname{font-size:13px;flex:1;}
 .bcount{font-size:12px;color:var(--muted);}
 .bbar-wrap{width:60px;height:4px;background:var(--surface2);border-radius:100px;overflow:hidden;}
-.bbar{height:100%;border-radius:100px;transition:width .4s;}
+.bbar{height:100%;border-radius:100px;}
 .bscore{font-size:12px;font-weight:700;min-width:36px;text-align:right;}
 .formula{background:var(--surface2);border-radius:10px;padding:12px 14px;margin:0 16px 16px;}
 .formula p{font-size:11px;color:var(--muted);line-height:1.7;}
@@ -125,13 +125,9 @@ tr:last-child td{border-bottom:none;}
     <span style="background:#EC6525"></span>
     <span style="background:#AF368C"></span>
   </div>
-  <div>
-    <h1>Klima-Score PoC</h1>
-    <p>Urbane Hitzeeffekt-Analyse</p>
-  </div>
+  <div><h1>Klima-Score PoC</h1><p>Urbane Hitzeeffekt-Analyse</p></div>
   <button class="live-pill" id="liveToggle" onclick="toggleLive()">
-    <span class="live-dot"></span>
-    <span id="liveLabel">Live</span>
+    <span class="live-dot"></span><span id="liveLabel">Live</span>
   </button>
 </header>
 <main>
@@ -144,17 +140,20 @@ tr:last-child td{border-bottom:none;}
       </div>
     </div>
     <div class="marker-status" id="markerStatus">
-      <span id="mc0" class="m-chip">- KS0 TL</span>
-      <span id="mc1" class="m-chip">- KS1 TR</span>
-      <span id="mc2" class="m-chip">- KS2 BR</span>
-      <span id="mc3" class="m-chip">- KS3 BL</span>
+      <span id="mc0" class="m-chip">- KS0</span>
+      <span id="mc1" class="m-chip">- KS1</span>
+      <span id="mc2" class="m-chip">- KS2</span>
+      <span id="mc3" class="m-chip">- KS3</span>
       <span id="mcAll" style="margin-left:auto;font-size:11px;color:var(--muted);">0/4</span>
     </div>
     <div class="preview-wrap">
       <video id="videoEl" autoplay playsinline muted></video>
       <canvas id="overlayCanvas"></canvas>
       <div class="placeholder" id="placeholder">
-        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
         <p>Kamera starten</p>
       </div>
     </div>
@@ -170,9 +169,8 @@ tr:last-child td{border-bottom:none;}
       <strong>Marker an die Grid-Ecken kleben:</strong><br>
       KS0 = oben links &nbsp; KS1 = oben rechts<br>
       KS2 = unten rechts &nbsp; KS3 = unten links<br><br>
-      Die App entzerrt das Bild perspektivisch und analysiert
-      <strong>ausschliesslich</strong> den Bereich zwischen den Markern.
-      Hintergrund und Umgebung werden vollstaendig ignoriert.
+      Alle 4 erkannt: App entzerrt perspektivisch und analysiert
+      <strong>nur</strong> den Bereich zwischen den Markern.
     </div>
   </div>
 
@@ -207,273 +205,262 @@ tr:last-child td{border-bottom:none;}
   <div class="card hidden" id="debugCard">
     <div class="card-header"><span class="card-title">Debug - HSL je Zelle</span></div>
     <div class="debug-scroll">
-      <table><thead><tr><th>Zelle</th><th>H</th><th>S%</th><th>L%</th><th>Kategorie</th><th>Score</th></tr></thead>
-      <tbody id="debugBody"></tbody></table>
+      <table>
+        <thead><tr><th>Zelle</th><th>H</th><th>S%</th><th>L%</th><th>Kategorie</th><th>Score</th></tr></thead>
+        <tbody id="debugBody"></tbody>
+      </table>
     </div>
   </div>
 </main>
 
+<!-- Offscreen canvases -->
+<canvas id="grabCanvas" style="display:none"></canvas>
 <canvas id="warpCanvas" style="display:none"></canvas>
-<canvas id="scanCanvas" style="display:none"></canvas>
 
 <script>
 // ============================================================
 // KATEGORIEN
 // ============================================================
-const CATS=[
-  {id:'green', name:'Gruenflaeche',  score:4,  color:'#5a9e3a',label:'Gruen',  match:(h,s,l)=>h>=75&&h<=165&&s>=25&&l>=15&&l<=75},
-  {id:'water', name:'Wasserflaeche', score:3,  color:'#3a7abf',label:'Wasser', match:(h,s,l)=>h>=175&&h<=255&&s>=25&&l>=15&&l<=75},
-  {id:'low',   name:'Niedrig Bebaut',score:-1, color:'#c9a227',label:'Niedrig',match:(h,s,l)=>h>=35&&h<75&&s>=20&&l>=40},
-  {id:'mid',   name:'Mittel Bebaut', score:-2, color:'#8b5e3c',label:'Mittel', match:(h,s,l)=>h>=15&&h<45&&s>=15&&l>=20&&l<55},
-  {id:'dense', name:'Dicht Bebaut',  score:-3, color:'#4a4642',label:'Dicht',  match:(h,s,l)=>l<28},
-  {id:'sealed',name:'Versiegelt',    score:-4, color:'#7a7672',label:'Grau',   match:(h,s,l)=>s<14&&l>=28&&l<=78},
-  {id:'unknwn',name:'Unbekannt',     score:0,  color:'#3a3836',label:'?',      match:()=>true},
+const CATS = [
+  {id:'green', name:'Gruenflaeche',   score: 4, color:'#5a9e3a', label:'Gruen',
+   match:(h,s,l)=>h>=75&&h<=165&&s>=25&&l>=15&&l<=75},
+  {id:'water', name:'Wasserflaeche',  score: 3, color:'#3a7abf', label:'Wasser',
+   match:(h,s,l)=>h>=175&&h<=255&&s>=25&&l>=15&&l<=75},
+  {id:'low',   name:'Niedrig Bebaut', score:-1, color:'#c9a227', label:'Niedrig',
+   match:(h,s,l)=>h>=35&&h<75&&s>=20&&l>=40},
+  {id:'mid',   name:'Mittel Bebaut',  score:-2, color:'#8b5e3c', label:'Mittel',
+   match:(h,s,l)=>h>=15&&h<45&&s>=15&&l>=20&&l<55},
+  {id:'dense', name:'Dicht Bebaut',   score:-3, color:'#4a4642', label:'Dicht',
+   match:(h,s,l)=>l<28},
+  {id:'sealed',name:'Versiegelt',     score:-4, color:'#7a7672', label:'Grau',
+   match:(h,s,l)=>s<14&&l>=28&&l<=78},
+  {id:'unknwn',name:'Unbekannt',      score: 0, color:'#3a3836', label:'?',
+   match:()=>true},
 ];
-function classify(h,s,l){for(const c of CATS)if(c.match(h,s,l))return c;return CATS[6];}
+
+function classify(h,s,l){
+  for(const c of CATS) if(c.match(h,s,l)) return c;
+  return CATS[6];
+}
 
 function rgbToHsl(r,g,b){
-  r/=255;g/=255;b/=255;
-  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+  r/=255; g/=255; b/=255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
   let h=0,s=0,l=(mx+mn)/2;
   if(mx!==mn){
     const d=mx-mn;
-    s=l>.5?d/(2-mx-mn):d/(mx+mn);
-    if(mx===r)h=((g-b)/d+(g<b?6:0))/6;
-    else if(mx===g)h=((b-r)/d+2)/6;
-    else h=((r-g)/d+4)/6;
+    s = l>0.5 ? d/(2-mx-mn) : d/(mx+mn);
+    if(mx===r)      h=((g-b)/d+(g<b?6:0))/6;
+    else if(mx===g) h=((b-r)/d+2)/6;
+    else            h=((r-g)/d+4)/6;
   }
-  return[Math.round(h*360),Math.round(s*100),Math.round(l*100)];
+  return [Math.round(h*360), Math.round(s*100), Math.round(l*100)];
 }
 
 function medianRGB(data,x,y,w,h,W){
   const rs=[],gs=[],bs=[];
-  for(let row=y;row<y+h;row++)for(let col=x;col<x+w;col++){
-    const i=(row*W+col)*4;rs.push(data[i]);gs.push(data[i+1]);bs.push(data[i+2]);
+  for(let row=y; row<y+h; row++){
+    for(let col=x; col<x+w; col++){
+      const i=(row*W+col)*4;
+      rs.push(data[i]); gs.push(data[i+1]); bs.push(data[i+2]);
+    }
   }
-  const m=a=>{a.sort((a,b)=>a-b);return a[Math.floor(a.length/2)];};
-  return[m(rs),m(gs),m(bs)];
+  const m=a=>{a.sort((a,b)=>a-b); return a[Math.floor(a.length/2)];};
+  return [m(rs),m(gs),m(bs)];
 }
 
 // ============================================================
-// QR-ERKENNUNG – robust fuer Bildschirm-Anzeige
-// Strategie:
-// 1. Vollbild mit hoher Aufloesung scannen
-// 2. Kontrast-boosted Version scannen
-// 3. Invertierte Version scannen (Bildschirm-Reflexionen)
-// 4. Quadranten-Scan mit Overlap
-// 5. Alle gefundenen Codes sammeln, unabhaengig von Quadrant
+// FRAME CAPTURE - einmal zeichnen, mehrfach nutzen
 // ============================================================
+const GW=640, GH=480; // grab resolution
+let grabCtx = null;
 
-const SCAN_W=800, SCAN_H=600;
-
-function prepareFrame(videoEl){
-  const sc=document.getElementById('scanCanvas');
-  sc.width=SCAN_W;sc.height=SCAN_H;
-  const ctx=sc.getContext('2d');
-  ctx.drawImage(videoEl,0,0,SCAN_W,SCAN_H);
-  return {canvas:sc, ctx};
+function grabFrame(videoEl){
+  const c = document.getElementById('grabCanvas');
+  c.width = GW; c.height = GH;
+  if(!grabCtx) grabCtx = c.getContext('2d');
+  grabCtx.drawImage(videoEl, 0, 0, GW, GH);
+  return grabCtx;
 }
 
-function contrastBoost(imgData){
-  // Increase contrast and sharpen for screen-captured QR codes
-  const d=imgData.data,len=d.length;
-  for(let i=0;i<len;i+=4){
-    // Convert to grayscale-weighted contrast boost
-    const factor=1.8;
-    d[i]  =Math.min(255,Math.max(0,factor*(d[i]-128)+128));
-    d[i+1]=Math.min(255,Math.max(0,factor*(d[i+1]-128)+128));
-    d[i+2]=Math.min(255,Math.max(0,factor*(d[i+2]-128)+128));
-  }
-  return imgData;
+// ============================================================
+// QR ERKENNUNG
+// - Vollbild scan (normal + invertiert)
+// - 4 Quadranten mit 25% Overlap (normal + invertiert)
+// - Kontrast-Boost Version
+// ============================================================
+const INNER_CORNER = {TL:'bottomRight', TR:'bottomLeft', BR:'topLeft', BL:'topRight'};
+const ID_TO_POS   = {KS0:'TL', KS1:'TR', KS2:'BR', KS3:'BL'};
+
+function locToFull(loc, offX, offY){
+  return {
+    topLeft:     {x: offX+loc.topLeftCorner.x,     y: offY+loc.topLeftCorner.y},
+    topRight:    {x: offX+loc.topRightCorner.x,    y: offY+loc.topRightCorner.y},
+    bottomRight: {x: offX+loc.bottomRightCorner.x, y: offY+loc.bottomRightCorner.y},
+    bottomLeft:  {x: offX+loc.bottomLeftCorner.x,  y: offY+loc.bottomLeftCorner.y},
+  };
 }
 
-function invertPixels(imgData){
-  const d=imgData.data,len=d.length;
-  for(let i=0;i<len;i+=4){
-    d[i]=255-d[i];d[i+1]=255-d[i+1];d[i+2]=255-d[i+2];
-  }
-  return imgData;
+function innerCorner(corners, pos){
+  const c = corners[INNER_CORNER[pos]];
+  return [c.x, c.y];
 }
 
-function scanRegion(ctx,x,y,w,h,offsetX,offsetY){
-  // Returns array of {id, innerPt, loc} found in this region
-  const results=[];
-  const posMap={KS0:'TL',KS1:'TR',KS2:'BR',KS3:'BL'};
-
-  function tryDecode(imgData, ox, oy){
-    // Normal
-    let code=jsQR(imgData.data,w,h,{inversionAttempts:'dontInvert'});
-    if(code && posMap[code.data]) addResult(code,ox,oy);
-    // Inverted (for screens with inverted display or reflections)
-    code=jsQR(imgData.data,w,h,{inversionAttempts:'onlyInvert'});
-    if(code && posMap[code.data]) addResult(code,ox,oy);
+function tryQR(imgData, w, h, offX, offY, out){
+  // Normal
+  let r = jsQR(imgData.data, w, h, {inversionAttempts:'dontInvert'});
+  if(r && ID_TO_POS[r.data] && !out[r.data]){
+    const pos = ID_TO_POS[r.data];
+    const corners = locToFull(r.location, offX, offY);
+    out[r.data] = {pos, corners, innerPt: innerCorner(corners, pos)};
   }
-
-  function addResult(code,ox,oy){
-    if(results.find(r=>r.id===code.data))return;
-    const loc={
-      topLeftCorner:    {x:ox+code.location.topLeftCorner.x,    y:oy+code.location.topLeftCorner.y},
-      topRightCorner:   {x:ox+code.location.topRightCorner.x,   y:oy+code.location.topRightCorner.y},
-      bottomRightCorner:{x:ox+code.location.bottomRightCorner.x,y:oy+code.location.bottomRightCorner.y},
-      bottomLeftCorner: {x:ox+code.location.bottomLeftCorner.x, y:oy+code.location.bottomLeftCorner.y},
-    };
-    const pos=posMap[code.data];
-    const innerPt=getInnerCorner(loc,pos);
-    results.push({id:code.data,pos,innerPt,loc});
+  // Invertiert (Bildschirm-Anzeige, Reflexionen)
+  r = jsQR(imgData.data, w, h, {inversionAttempts:'onlyInvert'});
+  if(r && ID_TO_POS[r.data] && !out[r.data]){
+    const pos = ID_TO_POS[r.data];
+    const corners = locToFull(r.location, offX, offY);
+    out[r.data] = {pos, corners, innerPt: innerCorner(corners, pos)};
   }
-
-  // Normal scan
-  let imgData=ctx.getImageData(x,y,w,h);
-  tryDecode(imgData,x,y);
-
-  // Contrast-boosted scan
-  let imgData2=ctx.getImageData(x,y,w,h);
-  contrastBoost(imgData2);
-  tryDecode(imgData2,x,y);
-
-  // Inverted scan
-  let imgData3=ctx.getImageData(x,y,w,h);
-  invertPixels(imgData3);
-  tryDecode(imgData3,x,y);
-
-  return results;
-}
-
-function getInnerCorner(loc, pos){
-  // Inner corner = QR corner facing toward grid center
-  // TL marker: bottom-right corner of QR faces grid
-  // TR marker: bottom-left corner faces grid
-  // BR marker: top-left corner faces grid
-  // BL marker: top-right corner faces grid
-  const map={TL:loc.bottomRightCorner, TR:loc.bottomLeftCorner,
-             BR:loc.topLeftCorner,     BL:loc.topRightCorner};
-  const c=map[pos];
-  return[c.x,c.y];
 }
 
 function detectMarkers(videoEl){
-  const {ctx}=prepareFrame(videoEl);
-  const W=SCAN_W,H=SCAN_H;
-  const found={};
+  const ctx = grabFrame(videoEl);
+  const out = {};
 
-  function merge(results){
-    results.forEach(r=>{if(!found[r.id])found[r.id]=r;});
+  // 1. Vollbild - normal + invertiert
+  tryQR(ctx.getImageData(0,0,GW,GH), GW, GH, 0, 0, out);
+
+  if(Object.keys(out).length < 4){
+    // 2. Quadranten mit 25% Overlap
+    const hw = Math.round(GW*0.6), hh = Math.round(GH*0.6);
+    const ox = GW-hw, oy = GH-hh;
+    const quads = [
+      [0,  0,  hw, hh],
+      [ox, 0,  hw, hh],
+      [ox, oy, hw, hh],
+      [0,  oy, hw, hh],
+    ];
+    for(const [qx,qy,qw,qh] of quads){
+      if(Object.keys(out).length===4) break;
+      tryQR(ctx.getImageData(qx,qy,qw,qh), qw, qh, qx, qy, out);
+    }
   }
 
-  // Full frame scan first (most reliable if markers are visible)
-  merge(scanRegion(ctx,0,0,W,H,0,0));
+  if(Object.keys(out).length < 4){
+    // 3. Kontrast-Boost Vollbild
+    const imgData = ctx.getImageData(0,0,GW,GH);
+    const d = imgData.data;
+    for(let i=0;i<d.length;i+=4){
+      d[i]  =Math.min(255,Math.max(0,1.8*(d[i]  -128)+128));
+      d[i+1]=Math.min(255,Math.max(0,1.8*(d[i+1]-128)+128));
+      d[i+2]=Math.min(255,Math.max(0,1.8*(d[i+2]-128)+128));
+    }
+    tryQR(imgData, GW, GH, 0, 0, out);
+  }
 
-  // Quadrant scans with 20% overlap to catch markers near center
-  const hw=Math.floor(W*0.55), hh=Math.floor(H*0.55);
-  const ox=W-hw, oy=H-hh;
-  merge(scanRegion(ctx, 0,  0,  hw,hh, 0,  0 ));  // TL quadrant
-  merge(scanRegion(ctx, ox, 0,  hw,hh, ox, 0 ));  // TR quadrant
-  merge(scanRegion(ctx, ox, oy, hw,hh, ox, oy));  // BR quadrant
-  merge(scanRegion(ctx, 0,  oy, hw,hh, 0,  oy));  // BL quadrant
-
-  // Scale from scan resolution back to 640x480 for homography
-  // (homography uses display-relative coords via overlay scaling)
-  return found;
+  return out;
 }
 
 function updateMarkerUI(markers){
-  const ids=['KS0','KS1','KS2','KS3'];
-  const labels=['TL','TR','BR','BL'];
-  let found=0;
+  const ids = ['KS0','KS1','KS2','KS3'];
+  const labels = ['TL','TR','BR','BL'];
+  let found = 0;
   ids.forEach((id,i)=>{
-    const chip=document.getElementById('mc'+i);
-    const has=!!markers[id];
-    if(has)found++;
-    chip.className='m-chip '+(has?'found':'missing');
-    chip.textContent=(has?'+ ':'- ')+'KS'+i+' '+labels[i];
+    const chip = document.getElementById('mc'+i);
+    const has = !!markers[id];
+    if(has) found++;
+    chip.className = 'm-chip '+(has?'found':'missing');
+    chip.textContent = (has ? '+ ':' - ')+'KS'+i+' '+labels[i];
   });
-  document.getElementById('mcAll').textContent=found+'/4';
+  document.getElementById('mcAll').textContent = found+'/4';
   return found;
 }
 
 // ============================================================
 // HOMOGRAPHIE
 // ============================================================
-function computeHomography(src,dst){
+function computeH(src, dst){
   const A=[],b=[];
   for(let i=0;i<4;i++){
-    const[sx,sy]=[src[i][0],src[i][1]];
-    const[dx,dy]=[dst[i][0],dst[i][1]];
-    A.push([sx,sy,1,0,0,0,-dx*sx,-dx*sy]);b.push(dx);
-    A.push([0,0,0,sx,sy,1,-dy*sx,-dy*sy]);b.push(dy);
+    const [sx,sy]=[src[i][0],src[i][1]];
+    const [dx,dy]=[dst[i][0],dst[i][1]];
+    A.push([sx,sy,1,0,0,0,-dx*sx,-dx*sy]); b.push(dx);
+    A.push([0,0,0,sx,sy,1,-dy*sx,-dy*sy]); b.push(dy);
   }
-  const h=solveLinear8(A,b);
-  if(!h)return null;
-  return[h[0],h[1],h[2],h[3],h[4],h[5],h[6],h[7],1];
+  const h = solveGauss(A,b);
+  if(!h) return null;
+  return [h[0],h[1],h[2],h[3],h[4],h[5],h[6],h[7],1];
 }
-function solveLinear8(A,b){
-  const n=8,M=A.map((row,i)=>[...row,b[i]]);
+
+function solveGauss(A,b){
+  const n=8, M=A.map((row,i)=>[...row,b[i]]);
   for(let col=0;col<n;col++){
     let mx=col;
-    for(let r=col+1;r<n;r++)if(Math.abs(M[r][col])>Math.abs(M[mx][col]))mx=r;
+    for(let r=col+1;r<n;r++) if(Math.abs(M[r][col])>Math.abs(M[mx][col])) mx=r;
     [M[col],M[mx]]=[M[mx],M[col]];
-    if(Math.abs(M[col][col])<1e-10)return null;
+    if(Math.abs(M[col][col])<1e-10) return null;
     for(let r=col+1;r<n;r++){
       const f=M[r][col]/M[col][col];
-      for(let k=col;k<=n;k++)M[r][k]-=f*M[col][k];
+      for(let k=col;k<=n;k++) M[r][k]-=f*M[col][k];
     }
   }
   const x=new Array(n).fill(0);
   for(let i=n-1;i>=0;i--){
     x[i]=M[i][n]/M[i][i];
-    for(let k=i-1;k>=0;k--)M[k][n]-=M[k][i]*x[i];
+    for(let k=i-1;k>=0;k--) M[k][n]-=M[k][i]*x[i];
   }
   return x;
 }
+
 function invertH(H){
-  const[a,b,c,d,e,f,g,h,ii]=[H[0],H[1],H[2],H[3],H[4],H[5],H[6],H[7],H[8]];
+  const [a,b,c,d,e,f,g,h,ii]=H;
   const det=a*(e*ii-f*h)-b*(d*ii-f*g)+c*(d*h-e*g);
-  if(Math.abs(det)<1e-10)return null;
-  return[
-    (e*ii-f*h)/det,(c*h-b*ii)/det,(b*f-c*e)/det,
-    (f*g-d*ii)/det,(a*ii-c*g)/det,(c*d-a*f)/det,
-    (d*h-e*g)/det,(b*g-a*h)/det,(a*e-b*d)/det,
+  if(Math.abs(det)<1e-10) return null;
+  return [
+    (e*ii-f*h)/det, (c*h-b*ii)/det, (b*f-c*e)/det,
+    (f*g-d*ii)/det, (a*ii-c*g)/det, (c*d-a*f)/det,
+    (d*h-e*g)/det,  (b*g-a*h)/det,  (a*e-b*d)/det,
   ];
 }
 
 // ============================================================
-// WARP – nur der Grid-Bereich zwischen den inneren Marker-Ecken
+// WARP - nur Grid-Bereich zwischen inneren Marker-Ecken
 // ============================================================
-function warpToGrid(videoEl,markers){
+function warpToGrid(markers){
+  // grabCanvas hat bereits das aktuelle Frame
   const S=500;
-  // Inner corners in SCAN space (800x600)
-  const src=[
+  const src = [
     markers['KS0'].innerPt,
     markers['KS1'].innerPt,
     markers['KS2'].innerPt,
     markers['KS3'].innerPt,
   ];
-  const dst=[[0,0],[S,0],[S,S],[0,S]];
-  const H=computeHomography(src,dst);
-  if(!H)return null;
-  const Hinv=invertH(H);
-  if(!Hinv)return null;
+  const dst = [[0,0],[S,0],[S,S],[0,S]];
+  const H    = computeH(src,dst);
+  if(!H) return null;
+  const Hinv = invertH(H);
+  if(!Hinv) return null;
 
-  // Render video at scan resolution
-  const srcC=document.getElementById('scanCanvas');
-  // scanCanvas already has current frame from detectMarkers
-  const srcPx=srcC.getContext('2d').getImageData(0,0,SCAN_W,SCAN_H);
+  // Quell-Pixel aus grabCanvas
+  const srcPx = grabCtx.getImageData(0,0,GW,GH);
 
-  const wc=document.getElementById('warpCanvas');
-  wc.width=S;wc.height=S;
-  const wctx=wc.getContext('2d');
-  const out=wctx.createImageData(S,S);
+  const wc  = document.getElementById('warpCanvas');
+  wc.width  = S; wc.height = S;
+  const wctx = wc.getContext('2d');
+  const out  = wctx.createImageData(S,S);
 
-  for(let dy=0;dy<S;dy++)for(let dx=0;dx<S;dx++){
-    const denom=Hinv[6]*dx+Hinv[7]*dy+Hinv[8];
-    const sx=Math.round((Hinv[0]*dx+Hinv[1]*dy+Hinv[2])/denom);
-    const sy=Math.round((Hinv[3]*dx+Hinv[4]*dy+Hinv[5])/denom);
-    if(sx>=0&&sx<SCAN_W&&sy>=0&&sy<SCAN_H){
-      const si=(sy*SCAN_W+sx)*4,di=(dy*S+dx)*4;
-      out.data[di]=srcPx.data[si];
-      out.data[di+1]=srcPx.data[si+1];
-      out.data[di+2]=srcPx.data[si+2];
-      out.data[di+3]=255;
+  for(let dy=0;dy<S;dy++){
+    for(let dx=0;dx<S;dx++){
+      const denom = Hinv[6]*dx + Hinv[7]*dy + Hinv[8];
+      const sx = Math.round((Hinv[0]*dx+Hinv[1]*dy+Hinv[2])/denom);
+      const sy = Math.round((Hinv[3]*dx+Hinv[4]*dy+Hinv[5])/denom);
+      if(sx>=0&&sx<GW&&sy>=0&&sy<GH){
+        const si=(sy*GW+sx)*4, di=(dy*S+dx)*4;
+        out.data[di]   = srcPx.data[si];
+        out.data[di+1] = srcPx.data[si+1];
+        out.data[di+2] = srcPx.data[si+2];
+        out.data[di+3] = 255;
+      }
     }
   }
   wctx.putImageData(out,0,0);
@@ -481,35 +468,39 @@ function warpToGrid(videoEl,markers){
 }
 
 // ============================================================
-// ANALYSE – nur der entzerrte Grid-Canvas
+// ANALYSE - Median pro Zelle, 20% Rand-Margin
 // ============================================================
-function analyzeCanvas(src){
-  const G=5,S=500;
-  const off=document.createElement('canvas');off.width=S;off.height=S;
-  off.getContext('2d').drawImage(src,0,0,S,S);
-  const d=off.getContext('2d').getImageData(0,0,S,S).data;
-  const cw=S/G,ch=S/G;
-  // Sample center 60% of each cell to avoid edge bleed
-  const margin=0.2;
-  return Array.from({length:G},(_,row)=>Array.from({length:G},(_,col)=>{
-    const x0=Math.floor(col*cw+cw*margin);
-    const y0=Math.floor(row*ch+ch*margin);
-    const sw=Math.floor(cw*(1-2*margin));
-    const sh=Math.floor(ch*(1-2*margin));
-    const[r,g,b]=medianRGB(d,x0,y0,sw,sh,S);
-    const[hh,s,l]=rgbToHsl(r,g,b);
-    return{row,col,h:hh,s,l,cat:classify(hh,s,l)};
-  })).flat();
+function analyzeCanvas(srcCanvas){
+  const G=5, S=400;
+  const off = document.createElement('canvas');
+  off.width=S; off.height=S;
+  off.getContext('2d').drawImage(srcCanvas,0,0,S,S);
+  const d   = off.getContext('2d').getImageData(0,0,S,S).data;
+  const cw  = S/G, ch = S/G;
+  const mg  = 0.18; // margin
+  return Array.from({length:G},(_,row)=>
+    Array.from({length:G},(_,col)=>{
+      const x0=Math.floor(col*cw+cw*mg);
+      const y0=Math.floor(row*ch+ch*mg);
+      const sw=Math.floor(cw*(1-2*mg));
+      const sh=Math.floor(ch*(1-2*mg));
+      const [r,g,b]=medianRGB(d,x0,y0,sw,sh,S);
+      const [hh,s,l]=rgbToHsl(r,g,b);
+      return {row,col,h:hh,s,l,cat:classify(hh,s,l)};
+    })
+  ).flat();
 }
 
 // ============================================================
 // RENDER
 // ============================================================
 function renderResults(cells,markerMode,markers){
-  document.getElementById('gridMode').textContent=markerMode?'Marker aktiv':'Fallback (kein Marker)';
-  const grid=document.getElementById('cellGrid');grid.innerHTML='';
+  document.getElementById('gridMode').textContent =
+    markerMode ? 'Marker aktiv' : 'Fallback (kein Marker)';
+
+  const grid=document.getElementById('cellGrid'); grid.innerHTML='';
   cells.forEach(c=>{
-    const d=document.createElement('div');d.className='cell';
+    const d=document.createElement('div'); d.className='cell';
     d.style.background=c.cat.color;
     d.innerHTML='<span>'+c.cat.label+'</span><span class="sc">'+(c.cat.score>0?'+':'')+c.cat.score+'</span>';
     grid.appendChild(d);
@@ -517,134 +508,138 @@ function renderResults(cells,markerMode,markers){
   document.getElementById('gridCard').classList.remove('hidden');
 
   const raw=cells.reduce((s,c)=>s+c.cat.score,0);
-  const n=cells.length,mx=n*4,mn=n*-4;
+  const n=cells.length, mx=n*4, mn=n*-4;
   const norm=Math.round(((raw-mn)/(mx-mn))*200-100);
   const pct=(norm+100)/200*100;
-  let title,desc,col;
-  if(norm>=50){title='Sehr kuehlend';desc='Hoher Gruen-/Wasseranteil.';col='#5a9e3a';}
-  else if(norm>=20){title='Kuehlend';desc='Ueberwiegend positive Flaechen.';col='#8aba3a';}
-  else if(norm>=-10){title='Neutral';desc='Ausgeglichene Mischung.';col='#888580';}
-  else if(norm>=-40){title='Waermend';desc='Zu viel versiegelte Flaechen.';col='#EC6525';}
-  else{title='Stark waermend';desc='Hoher UHI-Effekt zu erwarten.';col='#CF1820';}
 
-  document.getElementById('scoreNum').textContent=norm;
-  document.getElementById('scoreNum').style.color=col;
-  document.getElementById('scoreRing').style.borderColor=col;
-  document.getElementById('scoreTitle').textContent=title;
-  document.getElementById('scoreDesc').textContent=desc;
+  let title,desc,col;
+  if(norm>=50)      {title='Sehr kuehlend'; desc='Hoher Gruen-/Wasseranteil.';     col='#5a9e3a';}
+  else if(norm>=20) {title='Kuehlend';      desc='Ueberwiegend positive Flaechen.'; col='#8aba3a';}
+  else if(norm>=-10){title='Neutral';       desc='Ausgeglichene Mischung.';         col='#888580';}
+  else if(norm>=-40){title='Waermend';      desc='Zu viel versiegelte Flaechen.';   col='#EC6525';}
+  else              {title='Stark waermend';desc='Hoher UHI-Effekt zu erwarten.';   col='#CF1820';}
+
+  document.getElementById('scoreNum').textContent   = norm;
+  document.getElementById('scoreNum').style.color   = col;
+  document.getElementById('scoreRing').style.borderColor = col;
+  document.getElementById('scoreTitle').textContent = title;
+  document.getElementById('scoreDesc').textContent  = desc;
   const bf=document.getElementById('barFill');
-  bf.style.width=pct+'%';bf.style.background='linear-gradient(90deg,#CF1820,'+col+')';
+  bf.style.width=pct+'%';
+  bf.style.background='linear-gradient(90deg,#CF1820,'+col+')';
 
   const counts={};
-  cells.forEach(c=>{if(!counts[c.cat.id])counts[c.cat.id]={cat:c.cat,n:0};counts[c.cat.id].n++;});
+  cells.forEach(c=>{
+    if(!counts[c.cat.id]) counts[c.cat.id]={cat:c.cat,n:0};
+    counts[c.cat.id].n++;
+  });
   const blist=Object.values(counts).sort((a,b)=>b.n-a.n);
-  const br=document.getElementById('breakdown');br.innerHTML='';
+  const br=document.getElementById('breakdown'); br.innerHTML='';
   blist.forEach(({cat,n:cnt})=>{
     const contrib=cnt*cat.score;
-    const r=document.createElement('div');r.className='brow';
-    r.innerHTML='<div class="bswatch" style="background:'+cat.color+'"></div>'
+    const row=document.createElement('div'); row.className='brow';
+    row.innerHTML=
+      '<div class="bswatch" style="background:'+cat.color+'"></div>'
       +'<span class="bname">'+cat.name+'</span>'
       +'<span class="bcount">'+cnt+'x</span>'
       +'<div class="bbar-wrap"><div class="bbar" style="width:'+(cnt/n*100)+'%;background:'+cat.color+'"></div></div>'
       +'<span class="bscore" style="color:'+(contrib>=0?'#5a9e3a':'#CF1820')+'">'+(contrib>0?'+':'')+contrib+'</span>';
-    br.appendChild(r);
+    br.appendChild(row);
   });
   const parts=blist.map(({cat,n:cnt})=>cnt+'x('+(cat.score>0?'+':'')+cat.score+')').join(' + ');
-  document.getElementById('formulaText').innerHTML='<code>'+parts+' = '+raw+'</code><br>Normiert: <code>Score = '+norm+'</code>';
+  document.getElementById('formulaText').innerHTML=
+    '<code>'+parts+' = '+raw+'</code><br>Normiert: <code>Score = '+norm+'</code>';
   document.getElementById('scoreCard').classList.remove('hidden');
 
-  const tb=document.getElementById('debugBody');tb.innerHTML='';
+  const tb=document.getElementById('debugBody'); tb.innerHTML='';
   cells.forEach(c=>{
     const tr=document.createElement('tr');
-    tr.innerHTML='<td>'+String.fromCharCode(65+c.row)+(c.col+1)+'</td>'
+    tr.innerHTML=
+      '<td>'+String.fromCharCode(65+c.row)+(c.col+1)+'</td>'
       +'<td>'+c.h+'</td><td>'+c.s+'</td><td>'+c.l+'</td>'
       +'<td style="color:'+c.cat.color+'">'+c.cat.name+'</td>'
       +'<td style="color:'+(c.cat.score>=0?'#5a9e3a':'#CF1820')+';font-weight:700">'+(c.cat.score>0?'+':'')+c.cat.score+'</td>';
     tb.appendChild(tr);
   });
   document.getElementById('debugCard').classList.remove('hidden');
+
   drawOverlay(cells,markerMode,markers);
 }
 
 // ============================================================
-// OVERLAY – zeigt Grid-Grenze live auf dem Kamerabild
+// OVERLAY
 // ============================================================
 function drawOverlay(cells,markerMode,markers){
   const wrap=document.querySelector('.preview-wrap');
   const cv=document.getElementById('overlayCanvas');
-  cv.width=wrap.clientWidth;cv.height=wrap.clientHeight;
+  cv.width=wrap.clientWidth; cv.height=wrap.clientHeight;
   const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
 
-  if(markerMode&&markers){
-    // Scale from scan space (800x600) to display canvas
-    const sx=cv.width/SCAN_W, sy=cv.height/SCAN_H;
+  if(markerMode && markers){
+    const sx=cv.width/GW, sy=cv.height/GH;
     const pts=[
       markers['KS0'].innerPt,
       markers['KS1'].innerPt,
       markers['KS2'].innerPt,
       markers['KS3'].innerPt,
-    ].map(p=>[p[0]*sx,p[1]*sy]);
+    ].map(p=>[p[0]*sx, p[1]*sy]);
 
-    // Abdunkeln ausserhalb Grid
+    // Aussenbereich abdunkeln
     ctx.save();
     ctx.fillStyle='rgba(0,0,0,0.5)';
     ctx.fillRect(0,0,cv.width,cv.height);
     ctx.globalCompositeOperation='destination-out';
     ctx.beginPath();
     ctx.moveTo(pts[0][0],pts[0][1]);
-    pts.slice(1).forEach(p=>ctx.lineTo(p[0],p[1]));
-    ctx.closePath();ctx.fill();
+    for(let i=1;i<4;i++) ctx.lineTo(pts[i][0],pts[i][1]);
+    ctx.closePath(); ctx.fill();
     ctx.restore();
 
-    // Perspektivisch korrekte Grid-Linien
-    const G=5;
-    function lerp(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];}
-    ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;
-    for(let i=1;i<G;i++){
-      const t=i/G;
-      const t1=lerp(pts[0],pts[1],t),b1=lerp(pts[3],pts[2],t);
-      ctx.beginPath();ctx.moveTo(t1[0],t1[1]);ctx.lineTo(b1[0],b1[1]);ctx.stroke();
-      const l1=lerp(pts[0],pts[3],t),r1=lerp(pts[1],pts[2],t);
-      ctx.beginPath();ctx.moveTo(l1[0],l1[1]);ctx.lineTo(r1[0],r1[1]);ctx.stroke();
+    // Grid-Linien perspektivisch
+    function lerp(a,b,t){return[a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t];}
+    ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1;
+    for(let i=1;i<5;i++){
+      const t=i/5;
+      const t1=lerp(pts[0],pts[1],t), b1=lerp(pts[3],pts[2],t);
+      ctx.beginPath(); ctx.moveTo(t1[0],t1[1]); ctx.lineTo(b1[0],b1[1]); ctx.stroke();
+      const l1=lerp(pts[0],pts[3],t), r1=lerp(pts[1],pts[2],t);
+      ctx.beginPath(); ctx.moveTo(l1[0],l1[1]); ctx.lineTo(r1[0],r1[1]); ctx.stroke();
     }
-    // Rahmen orange
+    // Rahmen
     ctx.beginPath();
     ctx.moveTo(pts[0][0],pts[0][1]);
     pts.forEach(p=>ctx.lineTo(p[0],p[1]));
     ctx.closePath();
-    ctx.strokeStyle='#EC6525';ctx.lineWidth=2.5;ctx.stroke();
-    // Ecken-Dots
+    ctx.strokeStyle='#EC6525'; ctx.lineWidth=2.5; ctx.stroke();
+    // Ecken
     pts.forEach(p=>{
-      ctx.beginPath();ctx.arc(p[0],p[1],5,0,Math.PI*2);
-      ctx.fillStyle='#EC6525';ctx.fill();
+      ctx.beginPath(); ctx.arc(p[0],p[1],5,0,Math.PI*2);
+      ctx.fillStyle='#EC6525'; ctx.fill();
     });
   } else {
-    // Fallback: einfaches gleichmaessiges Grid
-    const G=5,cw=cv.width/G,ch=cv.height/G;
+    // Fallback-Grid
+    const G=5, cw=cv.width/G, ch=cv.height/G;
     cells.forEach(c=>{
-      const x=c.col*cw,y=c.row*ch;
-      ctx.strokeStyle=c.cat.color;ctx.lineWidth=2;
+      const x=c.col*cw, y=c.row*ch;
+      ctx.strokeStyle=c.cat.color; ctx.lineWidth=2;
       ctx.strokeRect(x+1,y+1,cw-2,ch-2);
-      ctx.fillStyle=c.cat.color+'33';ctx.fillRect(x+1,y+1,cw-2,ch-2);
+      ctx.fillStyle=c.cat.color+'33'; ctx.fillRect(x+1,y+1,cw-2,ch-2);
       ctx.fillStyle='white';
-      ctx.font='bold '+Math.floor(ch*.22)+'px system-ui';
-      ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText(c.cat.label,x+cw/2,y+ch/2);
+      ctx.font='bold '+Math.floor(ch*.2)+'px system-ui';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(c.cat.label, x+cw/2, y+ch/2);
     });
   }
 }
 
-// Live-Overlay waehrend Kamera laeuft (nur Grid-Rahmen, keine Analyse)
 function drawLiveBoundary(markers){
-  const found=Object.keys(markers).length;
-  if(found<4)return;
   const wrap=document.querySelector('.preview-wrap');
   const cv=document.getElementById('overlayCanvas');
-  cv.width=wrap.clientWidth;cv.height=wrap.clientHeight;
+  cv.width=wrap.clientWidth; cv.height=wrap.clientHeight;
   const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
-  const sx=cv.width/SCAN_W,sy=cv.height/SCAN_H;
+  const sx=cv.width/GW, sy=cv.height/GH;
   const pts=[
     markers['KS0'].innerPt,
     markers['KS1'].innerPt,
@@ -652,64 +647,81 @@ function drawLiveBoundary(markers){
     markers['KS3'].innerPt,
   ].map(p=>[p[0]*sx,p[1]*sy]);
   ctx.save();
-  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.fillStyle='rgba(0,0,0,0.4)';
   ctx.fillRect(0,0,cv.width,cv.height);
   ctx.globalCompositeOperation='destination-out';
   ctx.beginPath();
   ctx.moveTo(pts[0][0],pts[0][1]);
-  pts.slice(1).forEach(p=>ctx.lineTo(p[0],p[1]));
-  ctx.closePath();ctx.fill();ctx.restore();
+  for(let i=1;i<4;i++) ctx.lineTo(pts[i][0],pts[i][1]);
+  ctx.closePath(); ctx.fill(); ctx.restore();
   ctx.beginPath();
   ctx.moveTo(pts[0][0],pts[0][1]);
   pts.forEach(p=>ctx.lineTo(p[0],p[1]));
   ctx.closePath();
-  ctx.strokeStyle='#EC6525';ctx.lineWidth=2.5;ctx.stroke();
+  ctx.strokeStyle='#EC6525'; ctx.lineWidth=2.5; ctx.stroke();
   pts.forEach(p=>{
-    ctx.beginPath();ctx.arc(p[0],p[1],5,0,Math.PI*2);
-    ctx.fillStyle='#EC6525';ctx.fill();
+    ctx.beginPath(); ctx.arc(p[0],p[1],5,0,Math.PI*2);
+    ctx.fillStyle='#EC6525'; ctx.fill();
   });
 }
 
 // ============================================================
-// STATE
+// HAUPT-ANALYSE
 // ============================================================
-let stream=null,cameraOn=false,mode='snap',liveInterval=null,scanInterval=null;
-let lastMarkers={};
+function doAnalysis(){
+  const video=document.getElementById('videoEl');
+  if(!video || video.readyState<2) return;
+
+  // 1. Frame capturen
+  grabFrame(video);
+
+  // 2. Marker suchen
+  const markers = detectMarkers(video);
+  const found   = updateMarkerUI(markers);
+
+  let cells, markerMode=false;
+
+  if(found===4){
+    // 3a. Warp auf Grid-Bereich
+    const warped = warpToGrid(markers);
+    if(warped){
+      cells      = analyzeCanvas(warped);
+      markerMode = true;
+    } else {
+      // Warp fehlgeschlagen -> Fallback
+      cells = analyzeCanvas(document.getElementById('grabCanvas'));
+    }
+  } else {
+    // 3b. Fallback: ganzes Bild
+    cells = analyzeCanvas(document.getElementById('grabCanvas'));
+  }
+
+  renderResults(cells, markerMode, markerMode ? markers : null);
+}
+
+// ============================================================
+// STATE & KAMERA
+// ============================================================
+let stream=null, cameraOn=false, mode='snap';
+let liveInterval=null, scanInterval=null;
 
 function setMode(m){
   mode=m;
   document.getElementById('btnSnap').classList.toggle('active',m==='snap');
   document.getElementById('btnLive').classList.toggle('active',m==='live');
-  if(!cameraOn)return;
-  if(m==='live'){document.getElementById('liveToggle').style.display='flex';}
-  else{stopLive();document.getElementById('liveToggle').style.display='none';}
+  if(!cameraOn) return;
+  if(m==='live') document.getElementById('liveToggle').style.display='flex';
+  else { stopLive(); document.getElementById('liveToggle').style.display='none'; }
 }
 
-function doAnalysis(){
-  const video=document.getElementById('videoEl');
-  if(video.readyState<2)return;
-  const markers=detectMarkers(video);
-  lastMarkers=markers;
-  const found=updateMarkerUI(markers);
-  let cells,markerMode=false;
-  if(found===4){
-    const warped=warpToGrid(video,markers);
-    if(warped){cells=analyzeCanvas(warped);markerMode=true;}
-    else cells=analyzeCanvas(document.getElementById('scanCanvas'));
-  } else {
-    cells=analyzeCanvas(document.getElementById('scanCanvas'));
-  }
-  renderResults(cells,markerMode,markerMode?markers:null);
-}
-
-function toggleLive(){if(liveInterval)stopLive();else startLive();}
+function toggleLive(){ liveInterval ? stopLive() : startLive(); }
 function startLive(){
   document.getElementById('liveToggle').classList.add('active');
-  document.getElementById('liveLabel').textContent='Stop Live';
-  liveInterval=setInterval(doAnalysis,1800);
+  document.getElementById('liveLabel').textContent='Stop';
+  liveInterval=setInterval(doAnalysis,2000);
 }
 function stopLive(){
-  clearInterval(liveInterval);liveInterval=null;
+  clearInterval(liveInterval); liveInterval=null;
   document.getElementById('liveToggle').classList.remove('active');
   document.getElementById('liveLabel').textContent='Live';
 }
@@ -717,54 +729,65 @@ function stopLive(){
 function startMarkerScan(){
   scanInterval=setInterval(()=>{
     const video=document.getElementById('videoEl');
-    if(video.readyState<2)return;
+    if(!video||video.readyState<2) return;
+    grabFrame(video);
     const markers=detectMarkers(video);
-    lastMarkers=markers;
     updateMarkerUI(markers);
-    if(Object.keys(markers).length===4)drawLiveBoundary(markers);
-  },700);
+    if(Object.keys(markers).length===4) drawLiveBoundary(markers);
+    else {
+      const cv=document.getElementById('overlayCanvas');
+      cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+    }
+  },800);
 }
 
 async function startCamera(){
   try{
     stream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}},audio:false
+      video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}},
+      audio:false
     });
     const v=document.getElementById('videoEl');
-    v.srcObject=stream;v.style.display='block';
+    v.srcObject=stream; v.style.display='block';
     document.getElementById('placeholder').style.display='none';
     document.getElementById('markerStatus').classList.add('visible');
     document.getElementById('markerInfoCard').classList.remove('hidden');
     cameraOn=true;
     document.getElementById('mainBtn').textContent='Snapshot analysieren';
     document.getElementById('resetBtn').style.display='block';
-    if(mode==='live')document.getElementById('liveToggle').style.display='flex';
+    if(mode==='live') document.getElementById('liveToggle').style.display='flex';
     startMarkerScan();
-  }catch(e){
-    alert('Kamera-Zugriff nicht moeglich. Bitte HTTPS nutzen (GitHub Pages).');
+  } catch(e){
+    alert('Kamera nicht verfuegbar. Bitte HTTPS nutzen (GitHub Pages).');
   }
 }
 
-function handleMain(){if(!cameraOn){startCamera();return;}doAnalysis();}
+function handleMain(){
+  if(!cameraOn){ startCamera(); return; }
+  doAnalysis();
+}
 
 function resetAll(){
   stopLive();
-  clearInterval(scanInterval);scanInterval=null;
-  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
-  cameraOn=false;lastMarkers={};
-  const v=document.getElementById('videoEl');v.srcObject=null;v.style.display='none';
+  clearInterval(scanInterval); scanInterval=null;
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  cameraOn=false; grabCtx=null;
+  const v=document.getElementById('videoEl');
+  v.srcObject=null; v.style.display='none';
   const cv=document.getElementById('overlayCanvas');
   cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
   document.getElementById('placeholder').style.display='flex';
   document.getElementById('markerStatus').classList.remove('visible');
   document.getElementById('markerInfoCard').classList.add('hidden');
-  ['gridCard','scoreCard','debugCard'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  ['gridCard','scoreCard','debugCard'].forEach(id=>
+    document.getElementById(id).classList.add('hidden'));
   document.getElementById('mainBtn').textContent='Kamera starten';
   document.getElementById('resetBtn').style.display='none';
   document.getElementById('liveToggle').style.display='none';
   ['mc0','mc1','mc2','mc3'].forEach((id,i)=>{
     const el=document.getElementById(id);
-    el.className='m-chip';el.textContent='- KS'+i+' '+['TL','TR','BR','BL'][i];
+    el.className='m-chip';
+    el.textContent='- KS'+i+' '+['TL','TR','BR','BL'][i];
   });
   document.getElementById('mcAll').textContent='0/4';
 }
