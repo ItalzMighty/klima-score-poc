@@ -22,16 +22,6 @@ header{
 .logo-bars span{width:14px;height:3px;border-radius:2px;display:block;}
 header h1{font-size:16px;font-weight:700;}
 header p{font-size:11px;color:var(--muted);margin-top:1px;}
-.live-pill{
-  margin-left:auto;display:none;align-items:center;gap:6px;
-  padding:5px 12px;border-radius:100px;border:1px solid var(--border);
-  cursor:pointer;font-size:12px;font-weight:700;transition:all .2s;
-  background:var(--surface2);color:var(--muted);
-}
-.live-pill.active{background:#1a2e1a;color:#6daa45;border-color:#3a5a2a;}
-.live-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
-.live-pill.active .live-dot{animation:pulse 1s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 main{padding:16px;max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
 .card-header{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
@@ -54,7 +44,6 @@ main{padding:16px;max-width:480px;margin:0 auto;display:flex;flex-direction:colu
   transition:all .3s;
 }
 .m-chip.found{background:#1a2e1a;color:#6daa45;border-color:#3a5a2a;}
-.m-chip.cached{background:#1a2010;color:#aad060;border-color:#4a7a20;}
 .m-chip.missing{background:#2e1a1a;color:#e05050;border-color:#5a2a2a;}
 .btn-row{padding:12px 14px;display:flex;gap:8px;}
 .btn-main{
@@ -126,14 +115,7 @@ tr:last-child td{border-bottom:none;}
     <span style="background:#EC6525"></span>
     <span style="background:#AF368C"></span>
   </div>
-  <div>
-    <h1>Klima-Score PoC</h1>
-    <p>Urbane Hitzeeffekt-Analyse</p>
-  </div>
-  <button class="live-pill" id="liveToggle" onclick="toggleLive()">
-    <span class="live-dot"></span>
-    <span id="liveLabel">Live</span>
-  </button>
+  <div><h1>Klima-Score PoC</h1><p>Urbane Hitzeeffekt-Analyse</p></div>
 </header>
 <main>
   <div class="card">
@@ -145,10 +127,10 @@ tr:last-child td{border-bottom:none;}
       </div>
     </div>
     <div class="marker-status" id="markerStatus">
-      <span id="mc0" class="m-chip">◻ KS0</span>
-      <span id="mc1" class="m-chip">◻ KS1</span>
-      <span id="mc2" class="m-chip">◻ KS2</span>
-      <span id="mc3" class="m-chip">◻ KS3</span>
+      <span id="mc0" class="m-chip">◻ QR-0 TL</span>
+      <span id="mc1" class="m-chip">◻ QR-1 TR</span>
+      <span id="mc2" class="m-chip">◻ QR-2 BR</span>
+      <span id="mc3" class="m-chip">◻ QR-3 BL</span>
       <span id="mcAll" style="margin-left:auto;font-size:11px;color:var(--muted);align-self:center;">0/4</span>
     </div>
     <div class="preview-wrap">
@@ -164,18 +146,15 @@ tr:last-child td{border-bottom:none;}
       <button class="btn-reset" id="resetBtn" onclick="resetAll()">↺</button>
     </div>
   </div>
-
   <div class="card hidden" id="markerInfoCard">
     <div class="card-header"><span class="card-title">Marker-Erkennung</span></div>
     <div class="info-box" style="margin:14px">
-      <strong>Marker an die Grid-Ecken:</strong><br>
-      KS0 = Oben Links &nbsp;|&nbsp; KS1 = Oben Rechts<br>
-      KS2 = Unten Rechts &nbsp;|&nbsp; KS3 = Unten Links<br><br>
-      ✓ Erkannt &nbsp;≈ Gecacht (stabil, kurz verdeckt) &nbsp;✗ Fehlt<br>
-      Bei 4/4 wird das Grid automatisch entzerrt und analysiert.
+      <strong>So funktioniert es:</strong><br>
+      KS0 = Oben Links | KS1 = Oben Rechts<br>
+      KS2 = Unten Rechts | KS3 = Unten Links<br><br>
+      Alle 4 erkannt → perspektivische Entzerrung + Grid-Analyse.
     </div>
   </div>
-
   <div class="card hidden" id="gridCard">
     <div class="card-header">
       <span class="card-title">Erkannte Zellen (5×5)</span>
@@ -183,7 +162,6 @@ tr:last-child td{border-bottom:none;}
     </div>
     <div class="cell-grid" id="cellGrid"></div>
   </div>
-
   <div class="card hidden" id="scoreCard">
     <div class="card-header"><span class="card-title">Klima-Score</span></div>
     <div class="score-wrap">
@@ -192,10 +170,7 @@ tr:last-child td{border-bottom:none;}
           <div class="score-num" id="scoreNum">–</div>
           <div class="score-lbl">Score</div>
         </div>
-        <div class="score-info">
-          <h3 id="scoreTitle">–</h3>
-          <p id="scoreDesc">–</p>
-        </div>
+        <div class="score-info"><h3 id="scoreTitle">–</h3><p id="scoreDesc">–</p></div>
       </div>
       <div class="bar-track"><div class="bar-fill" id="barFill" style="width:50%"></div></div>
       <div class="bar-labels"><span>🔴 −100</span><span>+100 🟢</span></div>
@@ -203,7 +178,6 @@ tr:last-child td{border-bottom:none;}
     </div>
     <div class="formula"><p id="formulaText"></p></div>
   </div>
-
   <div class="card hidden" id="debugCard">
     <div class="card-header"><span class="card-title">Debug – HSL je Zelle</span></div>
     <div class="debug-scroll">
@@ -212,11 +186,8 @@ tr:last-child td{border-bottom:none;}
     </div>
   </div>
 </main>
-
 <canvas id="warpCanvas" style="display:none"></canvas>
-
 <script>
-// ─── KATEGORIEN ───────────────────────────────────────────────────────────────
 const CATS=[
   {id:'green', name:'Grünfläche',        score:4,  color:'#5a9e3a',emoji:'🌿',match:(h,s,l)=>h>=75&&h<=165&&s>=25&&l>=15&&l<=75},
   {id:'water', name:'Wasserfläche',       score:3,  color:'#3a7abf',emoji:'💧',match:(h,s,l)=>h>=175&&h<=255&&s>=25&&l>=15&&l<=75},
@@ -227,549 +198,165 @@ const CATS=[
   {id:'unknown',name:'Unbekannt',        score:0,  color:'#3a3836',emoji:'❓',match:()=>true},
 ];
 function classify(h,s,l){for(const c of CATS)if(c.match(h,s,l))return c;return CATS[6];}
-
 function rgbToHsl(r,g,b){
   r/=255;g/=255;b/=255;
   const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
   let h,s,l=(mx+mn)/2;
-  if(mx===mn){h=s=0;}
-  else{
-    const d=mx-mn;
-    s=l>.5?d/(2-mx-mn):d/(mx+mn);
-    switch(mx){
-      case r:h=((g-b)/d+(g<b?6:0))/6;break;
-      case g:h=((b-r)/d+2)/6;break;
-      case b:h=((r-g)/d+4)/6;break;
-    }
+  if(mx===mn){h=s=0;}else{
+    const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);
+    switch(mx){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;case b:h=((r-g)/d+4)/6;break;}
   }
   return[Math.round(h*360),Math.round(s*100),Math.round(l*100)];
 }
-
 function medianRGB(data,x,y,w,h,W){
   const rs=[],gs=[],bs=[];
-  for(let row=y;row<y+h;row++)for(let col=x;col<x+w;col++){
-    const i=(row*W+col)*4;rs.push(data[i]);gs.push(data[i+1]);bs.push(data[i+2]);
-  }
+  for(let row=y;row<y+h;row++)for(let col=x;col<x+w;col++){const i=(row*W+col)*4;rs.push(data[i]);gs.push(data[i+1]);bs.push(data[i+2]);}
   const m=a=>{a.sort((a,b)=>a-b);return a[Math.floor(a.length/2)];};
   return[m(rs),m(gs),m(bs)];
 }
-
-// ─── QR ERKENNUNG ─────────────────────────────────────────────────────────────
-// Scannt bei mehreren Auflösungen für Distanz-Robustheit.
-// Gibt für jeden Marker cx/cy (Mittelpunkt) + loc (4 Ecken) in 640x480-Koordinaten zurück.
-
-const VW=640, VH=480;
-
-function scanImageData(imgData, W, H, scaleToW, scaleToH, out){
-  // Beide Inversions-Modi probieren
-  for(const inv of ['dontInvert','onlyInvert']){
-    const code=jsQR(imgData.data,W,H,{inversionAttempts:inv});
-    if(code&&code.data.match(/^KS[0-3]$/)&&!out[code.data]){
+function detectMarkers(videoEl){
+  const sc=document.createElement('canvas');sc.width=640;sc.height=480;
+  const ctx=sc.getContext('2d');ctx.drawImage(videoEl,0,0,640,480);
+  const imgData=ctx.getImageData(0,0,640,480);const markers={};
+  const regions=[{x:0,y:0,w:320,h:240},{x:320,y:0,w:320,h:240},{x:320,y:240,w:320,h:240},{x:0,y:240,w:320,h:240}];
+  for(const reg of regions){
+    const sub=ctx.getImageData(reg.x,reg.y,reg.w,reg.h);
+    const code=jsQR(sub.data,reg.w,reg.h,{inversionAttempts:'dontInvert'});
+    if(code&&code.data.match(/^KS[0-3]$/)){
       const loc=code.location;
-      const sx=scaleToW/W, sy=scaleToH/H;
-      const fullLoc={
-        topLeftCorner:     {x:loc.topLeftCorner.x*sx,     y:loc.topLeftCorner.y*sy},
-        topRightCorner:    {x:loc.topRightCorner.x*sx,    y:loc.topRightCorner.y*sy},
-        bottomRightCorner: {x:loc.bottomRightCorner.x*sx, y:loc.bottomRightCorner.y*sy},
-        bottomLeftCorner:  {x:loc.bottomLeftCorner.x*sx,  y:loc.bottomLeftCorner.y*sy},
-      };
+      const fullLoc={topLeftCorner:{x:reg.x+loc.topLeftCorner.x,y:reg.y+loc.topLeftCorner.y},topRightCorner:{x:reg.x+loc.topRightCorner.x,y:reg.y+loc.topRightCorner.y},bottomRightCorner:{x:reg.x+loc.bottomRightCorner.x,y:reg.y+loc.bottomRightCorner.y},bottomLeftCorner:{x:reg.x+loc.bottomLeftCorner.x,y:reg.y+loc.bottomLeftCorner.y}};
       const cx=(fullLoc.topLeftCorner.x+fullLoc.topRightCorner.x+fullLoc.bottomRightCorner.x+fullLoc.bottomLeftCorner.x)/4;
       const cy=(fullLoc.topLeftCorner.y+fullLoc.topRightCorner.y+fullLoc.bottomRightCorner.y+fullLoc.bottomLeftCorner.y)/4;
-      out[code.data]={cx,cy,loc:fullLoc};
+      markers[code.data]={cx,cy,loc:fullLoc};
     }
   }
-}
-
-function detectMarkers(videoEl){
-  const sc=document.createElement('canvas');
-  sc.width=VW; sc.height=VH;
-  const ctx=sc.getContext('2d');
-  ctx.drawImage(videoEl,0,0,VW,VH);
-
-  const out={};
-
-  // 1. Quadranten-Scan (640x480, je 320x240 + 25% Overlap)
-  const regions=[
-    {x:0,   y:0,   w:360,h:270},
-    {x:280, y:0,   w:360,h:270},
-    {x:280, y:210, w:360,h:270},
-    {x:0,   y:210, w:360,h:270},
-  ];
-  for(const reg of regions){
-    if(Object.keys(out).length===4) break;
-    const sub=ctx.getImageData(reg.x,reg.y,reg.w,reg.h);
-    scanImageData(sub, reg.w,reg.h, VW,VH,
-      // Wir brauchen absolute Koordinaten: Offset addieren nach scan
-      // scanImageData skaliert auf scaleToW/H - hier aber mit Offset
-      // → eigene Mini-Routine:
-      (()=>{
-        const tmpOut={};
-        for(const inv of ['dontInvert','onlyInvert']){
-          const code=jsQR(sub.data,reg.w,reg.h,{inversionAttempts:inv});
-          if(code&&code.data.match(/^KS[0-3]$/)&&!out[code.data]&&!tmpOut[code.data]){
-            const loc=code.location;
-            const fullLoc={
-              topLeftCorner:     {x:reg.x+loc.topLeftCorner.x,     y:reg.y+loc.topLeftCorner.y},
-              topRightCorner:    {x:reg.x+loc.topRightCorner.x,    y:reg.y+loc.topRightCorner.y},
-              bottomRightCorner: {x:reg.x+loc.bottomRightCorner.x, y:reg.y+loc.bottomRightCorner.y},
-              bottomLeftCorner:  {x:reg.x+loc.bottomLeftCorner.x,  y:reg.y+loc.bottomLeftCorner.y},
-            };
-            const cx=(fullLoc.topLeftCorner.x+fullLoc.topRightCorner.x+fullLoc.bottomRightCorner.x+fullLoc.bottomLeftCorner.x)/4;
-            const cy=(fullLoc.topLeftCorner.y+fullLoc.topRightCorner.y+fullLoc.bottomRightCorner.y+fullLoc.bottomLeftCorner.y)/4;
-            tmpOut[code.data]={cx,cy,loc:fullLoc};
-          }
-        }
-        Object.assign(out,tmpOut);
-        return null;
-      })()
-    );
+  const fullCode=jsQR(imgData.data,640,480,{inversionAttempts:'dontInvert'});
+  if(fullCode&&fullCode.data.match(/^KS[0-3]$/)&&!markers[fullCode.data]){
+    const loc=fullCode.location;
+    const cx=(loc.topLeftCorner.x+loc.topRightCorner.x+loc.bottomRightCorner.x+loc.bottomLeftCorner.x)/4;
+    const cy=(loc.topLeftCorner.y+loc.topRightCorner.y+loc.bottomRightCorner.y+loc.bottomLeftCorner.y)/4;
+    markers[fullCode.data]={cx,cy,loc};
   }
-
-  // 2. Vollbild-Scan 640x480
-  if(Object.keys(out).length<4){
-    const full=ctx.getImageData(0,0,VW,VH);
-    for(const inv of ['dontInvert','onlyInvert']){
-      const code=jsQR(full.data,VW,VH,{inversionAttempts:inv});
-      if(code&&code.data.match(/^KS[0-3]$/)&&!out[code.data]){
-        const loc=code.location;
-        const fullLoc={
-          topLeftCorner:     {x:loc.topLeftCorner.x,     y:loc.topLeftCorner.y},
-          topRightCorner:    {x:loc.topRightCorner.x,    y:loc.topRightCorner.y},
-          bottomRightCorner: {x:loc.bottomRightCorner.x, y:loc.bottomRightCorner.y},
-          bottomLeftCorner:  {x:loc.bottomLeftCorner.x,  y:loc.bottomLeftCorner.y},
-        };
-        const cx=(fullLoc.topLeftCorner.x+fullLoc.topRightCorner.x+fullLoc.bottomRightCorner.x+fullLoc.bottomLeftCorner.x)/4;
-        const cy=(fullLoc.topLeftCorner.y+fullLoc.topRightCorner.y+fullLoc.bottomRightCorner.y+fullLoc.bottomLeftCorner.y)/4;
-        out[code.data]={cx,cy,loc:fullLoc};
-      }
-    }
-  }
-
-  // 3. Hochskalierter Scan (für große Distanz: QR-Code nimmt kleinen Anteil ein)
-  if(Object.keys(out).length<4){
-    const BIG_W=960, BIG_H=720;
-    const big=document.createElement('canvas');
-    big.width=BIG_W; big.height=BIG_H;
-    big.getContext('2d').drawImage(videoEl,0,0,BIG_W,BIG_H);
-    const bigData=big.getContext('2d').getImageData(0,0,BIG_W,BIG_H);
-    const sx=VW/BIG_W, sy=VH/BIG_H;
-    for(const inv of ['dontInvert','onlyInvert']){
-      const code=jsQR(bigData.data,BIG_W,BIG_H,{inversionAttempts:inv});
-      if(code&&code.data.match(/^KS[0-3]$/)&&!out[code.data]){
-        const loc=code.location;
-        // Zurückskalieren auf 640x480
-        const fullLoc={
-          topLeftCorner:     {x:loc.topLeftCorner.x*sx,     y:loc.topLeftCorner.y*sy},
-          topRightCorner:    {x:loc.topRightCorner.x*sx,    y:loc.topRightCorner.y*sy},
-          bottomRightCorner: {x:loc.bottomRightCorner.x*sx, y:loc.bottomRightCorner.y*sy},
-          bottomLeftCorner:  {x:loc.bottomLeftCorner.x*sx,  y:loc.bottomLeftCorner.y*sy},
-        };
-        const cx=(fullLoc.topLeftCorner.x+fullLoc.topRightCorner.x+fullLoc.bottomRightCorner.x+fullLoc.bottomLeftCorner.x)/4;
-        const cy=(fullLoc.topLeftCorner.y+fullLoc.topRightCorner.y+fullLoc.bottomRightCorner.y+fullLoc.bottomLeftCorner.y)/4;
-        out[code.data]={cx,cy,loc:fullLoc};
-      }
-    }
-  }
-
-  return out;
+  return markers;
 }
-
-// ─── MARKER CACHING ───────────────────────────────────────────────────────────
-// Sobald alle 4 Marker erkannt wurden, werden ihre Positionen gecacht.
-// Ein gecachter Marker bleibt aktiv, solange er nicht durch einen neuen
-// ersetzt wird. Nur wenn ein Marker FRISCH erkannt wird, aktualisiert sich der Cache.
-// → Bei kurzer Verdeckung oder Bewegungsunschärfe bleibt das Grid stabil.
-
-let markerCache = {};  // {KS0:{cx,cy,loc}, ...}
-let cacheAge   = {};   // {KS0: frames since last seen}
-const MAX_CACHE_AGE = 8;  // Frames bevor ein gecachter Marker als verloren gilt
-
-function updateCache(freshMarkers){
-  const ids=['KS0','KS1','KS2','KS3'];
-  // Frische Marker updaten Cache und setzen Age auf 0
-  for(const id of ids){
-    if(freshMarkers[id]){
-      markerCache[id]=freshMarkers[id];
-      cacheAge[id]=0;
-    } else if(markerCache[id]){
-      // Cache altern lassen
-      cacheAge[id]=(cacheAge[id]||0)+1;
-      if(cacheAge[id]>MAX_CACHE_AGE){
-        delete markerCache[id];
-        delete cacheAge[id];
-      }
-    }
-  }
-  return markerCache;
+function updateMarkerUI(markers){
+  const ids=['KS0','KS1','KS2','KS3'],labels=['TL','TR','BR','BL'];let found=0;
+  ids.forEach((id,i)=>{const chip=document.getElementById('mc'+i);const has=!!markers[id];if(has)found++;chip.className='m-chip '+(has?'found':'missing');chip.textContent=(has?'✓':'◻')+' QR-'+i+' '+labels[i];});
+  document.getElementById('mcAll').textContent=found+'/4';return found;
 }
-
-function updateMarkerUI(fresh, cached){
-  const ids=['KS0','KS1','KS2','KS3'];
-  let found=0;
-  ids.forEach((id,i)=>{
-    const chip=document.getElementById('mc'+i);
-    const isFresh=!!fresh[id];
-    const isCached=!isFresh&&!!cached[id];
-    if(isFresh||isCached) found++;
-    chip.className='m-chip '+(isFresh?'found':isCached?'cached':'missing');
-    chip.textContent=(isFresh?'✓':isCached?'≈':'◻')+' KS'+i;
-  });
-  document.getElementById('mcAll').textContent=found+'/4';
-  return found;
-}
-
-// ─── GRID-ECKEN ───────────────────────────────────────────────────────────────
-// Jeder QR-Marker liegt AN einer Grid-Ecke.
-// Wir nehmen die ÄUSSERE Ecke des Markers zur Grid-Ecke hin –
-// das ist die Ecke die tatsächlich auf der Grid-Ecke sitzt.
-//
-//  KS0 (oben links):  topLeftCorner     des QR-Codes = Grid-Ecke oben links
-//  KS1 (oben rechts): topRightCorner    = Grid-Ecke oben rechts
-//  KS2 (unten rechts):bottomRightCorner = Grid-Ecke unten rechts
-//  KS3 (unten links): bottomLeftCorner  = Grid-Ecke unten links
-//
-// Diese Ecken sind die am weitesten vom Grid-Zentrum entfernten Punkte des
-// jeweiligen Markers, und decken damit den gesamten Grid-Bereich ab.
-function gridCorner(marker, id){
+function innerCorner(marker,id){
   const loc=marker.loc;
-  if(id==='KS0') return [loc.topLeftCorner.x,     loc.topLeftCorner.y];
-  if(id==='KS1') return [loc.topRightCorner.x,    loc.topRightCorner.y];
-  if(id==='KS2') return [loc.bottomRightCorner.x, loc.bottomRightCorner.y];
-  if(id==='KS3') return [loc.bottomLeftCorner.x,  loc.bottomLeftCorner.y];
+  if(id==='KS0')return[loc.bottomRightCorner.x,loc.bottomRightCorner.y];
+  if(id==='KS1')return[loc.bottomLeftCorner.x,loc.bottomLeftCorner.y];
+  if(id==='KS2')return[loc.topLeftCorner.x,loc.topLeftCorner.y];
+  if(id==='KS3')return[loc.topRightCorner.x,loc.topRightCorner.y];
 }
-
-// ─── HOMOGRAPHIE ──────────────────────────────────────────────────────────────
 function computeHomography(src,dst){
   const A=[],b=[];
-  for(let i=0;i<4;i++){
-    const[sx,sy]=[src[i][0],src[i][1]];
-    const[dx,dy]=[dst[i][0],dst[i][1]];
-    A.push([sx,sy,1,0,0,0,-dx*sx,-dx*sy]);b.push(dx);
-    A.push([0,0,0,sx,sy,1,-dy*sx,-dy*sy]);b.push(dy);
-  }
-  const h=solveLinear8x8(A,b);
-  if(!h)return null;
-  return[h[0],h[1],h[2],h[3],h[4],h[5],h[6],h[7],1];
+  for(let i=0;i<4;i++){const[sx,sy]=[src[i][0],src[i][1]];const[dx,dy]=[dst[i][0],dst[i][1]];A.push([sx,sy,1,0,0,0,-dx*sx,-dx*sy]);b.push(dx);A.push([0,0,0,sx,sy,1,-dy*sx,-dy*sy]);b.push(dy);}
+  const h=solveLinear8x8(A,b);if(!h)return null;return[h[0],h[1],h[2],h[3],h[4],h[5],h[6],h[7],1];
 }
 function solveLinear8x8(A,b){
   const n=8,M=A.map((row,i)=>[...row,b[i]]);
-  for(let col=0;col<n;col++){
-    let maxRow=col;
-    for(let row=col+1;row<n;row++)if(Math.abs(M[row][col])>Math.abs(M[maxRow][col]))maxRow=row;
-    [M[col],M[maxRow]]=[M[maxRow],M[col]];
-    if(Math.abs(M[col][col])<1e-10)return null;
-    for(let row=col+1;row<n;row++){
-      const f=M[row][col]/M[col][col];
-      for(let k=col;k<=n;k++)M[row][k]-=f*M[col][k];
-    }
-  }
-  const x=new Array(n).fill(0);
-  for(let i=n-1;i>=0;i--){
-    x[i]=M[i][n]/M[i][i];
-    for(let k=i-1;k>=0;k--)M[k][n]-=M[k][i]*x[i];
-  }
-  return x;
+  for(let col=0;col<n;col++){let maxRow=col;for(let row=col+1;row<n;row++)if(Math.abs(M[row][col])>Math.abs(M[maxRow][col]))maxRow=row;[M[col],M[maxRow]]=[M[maxRow],M[col]];if(Math.abs(M[col][col])<1e-10)return null;for(let row=col+1;row<n;row++){const f=M[row][col]/M[col][col];for(let k=col;k<=n;k++)M[row][k]-=f*M[col][k];}}
+  const x=new Array(n).fill(0);for(let i=n-1;i>=0;i--){x[i]=M[i][n]/M[i][i];for(let k=i-1;k>=0;k--)M[k][n]-=M[k][i]*x[i];}return x;
 }
 function invertHomography(H){
   const[a,b,c,d,e,f,g,h,ii]=[H[0],H[1],H[2],H[3],H[4],H[5],H[6],H[7],H[8]];
-  const det=a*(e*ii-f*h)-b*(d*ii-f*g)+c*(d*h-e*g);
-  if(Math.abs(det)<1e-10)return null;
-  return[
-    (e*ii-f*h)/det,(c*h-b*ii)/det,(b*f-c*e)/det,
-    (f*g-d*ii)/det,(a*ii-c*g)/det,(c*d-a*f)/det,
-    (d*h-e*g)/det,(b*g-a*h)/det,(a*e-b*d)/det,
-  ];
+  const det=a*(e*ii-f*h)-b*(d*ii-f*g)+c*(d*h-e*g);if(Math.abs(det)<1e-10)return null;
+  return[(e*ii-f*h)/det,(c*h-b*ii)/det,(b*f-c*e)/det,(f*g-d*ii)/det,(a*ii-c*g)/det,(c*d-a*f)/det,(d*h-e*g)/det,(b*g-a*h)/det,(a*e-b*d)/det];
 }
-
-// ─── WARP ─────────────────────────────────────────────────────────────────────
-function warpImage(videoEl, markers){
-  const S=400;
-  // Äußere Grid-Ecken der Marker als Quellpunkte
-  const src=[
-    gridCorner(markers['KS0'],'KS0'),
-    gridCorner(markers['KS1'],'KS1'),
-    gridCorner(markers['KS2'],'KS2'),
-    gridCorner(markers['KS3'],'KS3'),
-  ];
+function warpImage(videoEl,markers){
+  const S=400,VW=640,VH=480;
+  const src=[innerCorner(markers['KS0'],'KS0'),innerCorner(markers['KS1'],'KS1'),innerCorner(markers['KS2'],'KS2'),innerCorner(markers['KS3'],'KS3')];
   const dst=[[0,0],[S,0],[S,S],[0,S]];
-  const H=computeHomography(src,dst);
-  if(!H)return null;
-  const Hinv=invertHomography(H);
-  if(!Hinv)return null;
-
-  const srcCanvas=document.createElement('canvas');
-  srcCanvas.width=VW;srcCanvas.height=VH;
+  const H=computeHomography(src,dst);if(!H)return null;
+  const Hinv=invertHomography(H);if(!Hinv)return null;
+  const srcCanvas=document.createElement('canvas');srcCanvas.width=VW;srcCanvas.height=VH;
   srcCanvas.getContext('2d').drawImage(videoEl,0,0,VW,VH);
   const srcImg=srcCanvas.getContext('2d').getImageData(0,0,VW,VH);
-
-  const wc=document.getElementById('warpCanvas');
-  wc.width=S;wc.height=S;
-  const wctx=wc.getContext('2d');
-  const dstImg=wctx.createImageData(S,S);
-
+  const wc=document.getElementById('warpCanvas');wc.width=S;wc.height=S;
+  const wctx=wc.getContext('2d');const dstImg=wctx.createImageData(S,S);
   for(let dy=0;dy<S;dy++)for(let dx=0;dx<S;dx++){
     const denom=Hinv[6]*dx+Hinv[7]*dy+Hinv[8];
     const sx=Math.round((Hinv[0]*dx+Hinv[1]*dy+Hinv[2])/denom);
     const sy=Math.round((Hinv[3]*dx+Hinv[4]*dy+Hinv[5])/denom);
-    if(sx>=0&&sx<VW&&sy>=0&&sy<VH){
-      const si=(sy*VW+sx)*4,di=(dy*S+dx)*4;
-      dstImg.data[di]=srcImg.data[si];
-      dstImg.data[di+1]=srcImg.data[si+1];
-      dstImg.data[di+2]=srcImg.data[si+2];
-      dstImg.data[di+3]=255;
-    }
+    if(sx>=0&&sx<VW&&sy>=0&&sy<VH){const si=(sy*VW+sx)*4,di=(dy*S+dx)*4;dstImg.data[di]=srcImg.data[si];dstImg.data[di+1]=srcImg.data[si+1];dstImg.data[di+2]=srcImg.data[si+2];dstImg.data[di+3]=255;}
   }
-  wctx.putImageData(dstImg,0,0);
-  return wc;
+  wctx.putImageData(dstImg,0,0);return wc;
 }
-
-// ─── ANALYSE ──────────────────────────────────────────────────────────────────
 function analyzeSource(src){
-  const G=5,S=300;
-  const off=document.createElement('canvas');off.width=S;off.height=S;
-  off.getContext('2d').drawImage(src,0,0,S,S);
-  const d=off.getContext('2d').getImageData(0,0,S,S).data;
+  const G=5,S=300;const off=document.createElement('canvas');off.width=S;off.height=S;
+  off.getContext('2d').drawImage(src,0,0,S,S);const d=off.getContext('2d').getImageData(0,0,S,S).data;
   const cw=S/G,ch=S/G;
   return Array.from({length:G},(_,row)=>Array.from({length:G},(_,col)=>{
     const[r,g,b]=medianRGB(d,Math.floor(col*cw),Math.floor(row*ch),Math.floor(cw),Math.floor(ch),S);
-    const[hh,s,l]=rgbToHsl(r,g,b);
-    return{row,col,h:hh,s,l,cat:classify(hh,s,l)};
+    const[hh,s,l]=rgbToHsl(r,g,b);return{row,col,h:hh,s,l,cat:classify(hh,s,l)};
   })).flat();
 }
-
-// ─── RENDER ───────────────────────────────────────────────────────────────────
 function renderResults(cells,markerMode,markers){
-  document.getElementById('gridMode').textContent=markerMode?'📐 Marker-entzerrt':'⚠️ Fallback (kein Marker)';
+  document.getElementById('gridMode').textContent=markerMode?'📐 Marker-entzerrt':'⚠️ Fallback';
   const grid=document.getElementById('cellGrid');grid.innerHTML='';
-  cells.forEach(c=>{
-    const d=document.createElement('div');d.className='cell';
-    d.style.background=c.cat.color;
-    d.innerHTML=`<span>${c.cat.emoji}</span><span class="sc">${c.cat.score>0?'+':''}${c.cat.score}</span>`;
-    grid.appendChild(d);
-  });
+  cells.forEach(c=>{const d=document.createElement('div');d.className='cell';d.style.background=c.cat.color;d.innerHTML=`<span>${c.cat.emoji}</span><span class="sc">${c.cat.score>0?'+':''}${c.cat.score}</span>`;grid.appendChild(d);});
   document.getElementById('gridCard').classList.remove('hidden');
-
-  const raw=cells.reduce((s,c)=>s+c.cat.score,0);
-  const n=cells.length,mx=n*4,mn=n*-4;
-  const norm=Math.round(((raw-mn)/(mx-mn))*200-100);
-  const pct=(norm+100)/200*100;
+  const raw=cells.reduce((s,c)=>s+c.cat.score,0);const n=cells.length,mx=n*4,mn=n*-4;
+  const norm=Math.round(((raw-mn)/(mx-mn))*200-100);const pct=(norm+100)/200*100;
   let title,desc,col;
   if(norm>=50){title='Sehr kühlend 🟢';desc='Hoher Grün-/Wasseranteil.';col='#5a9e3a';}
   else if(norm>=20){title='Kühlend 🟡';desc='Überwiegend positive Flächen.';col='#8aba3a';}
   else if(norm>=-10){title='Neutral ⚪';desc='Ausgeglichene Mischung.';col='#888580';}
   else if(norm>=-40){title='Wärmend 🟠';desc='Zu viel versiegelte Flächen.';col='#EC6525';}
   else{title='Stark wärmend 🔴';desc='Hoher UHI-Effekt zu erwarten.';col='#CF1820';}
-
-  document.getElementById('scoreNum').textContent=norm;
-  document.getElementById('scoreNum').style.color=col;
-  document.getElementById('scoreRing').style.borderColor=col;
-  document.getElementById('scoreTitle').textContent=title;
-  document.getElementById('scoreDesc').textContent=desc;
-  const bf=document.getElementById('barFill');
-  bf.style.width=pct+'%';bf.style.background=`linear-gradient(90deg,#CF1820,${col})`;
-
-  const counts={};
-  cells.forEach(c=>{if(!counts[c.cat.id])counts[c.cat.id]={cat:c.cat,n:0};counts[c.cat.id].n++;});
-  const blist=Object.values(counts).sort((a,b)=>b.n-a.n);
-  const br=document.getElementById('breakdown');br.innerHTML='';
-  blist.forEach(({cat,n:cnt})=>{
-    const contrib=cnt*cat.score;
-    const r=document.createElement('div');r.className='brow';
-    r.innerHTML=`<div class="bswatch" style="background:${cat.color}"></div>
-      <span class="bname">${cat.emoji} ${cat.name}</span>
-      <span class="bcount">${cnt}×</span>
-      <div class="bbar-wrap"><div class="bbar" style="width:${cnt/n*100}%;background:${cat.color}"></div></div>
-      <span class="bscore" style="color:${contrib>=0?'#5a9e3a':'#CF1820'}">${contrib>0?'+':''}${contrib}</span>`;
-    br.appendChild(r);
-  });
+  document.getElementById('scoreNum').textContent=norm;document.getElementById('scoreNum').style.color=col;
+  document.getElementById('scoreRing').style.borderColor=col;document.getElementById('scoreTitle').textContent=title;document.getElementById('scoreDesc').textContent=desc;
+  const bf=document.getElementById('barFill');bf.style.width=pct+'%';bf.style.background=`linear-gradient(90deg,#CF1820,${col})`;
+  const counts={};cells.forEach(c=>{if(!counts[c.cat.id])counts[c.cat.id]={cat:c.cat,n:0};counts[c.cat.id].n++;});
+  const blist=Object.values(counts).sort((a,b)=>b.n-a.n);const br=document.getElementById('breakdown');br.innerHTML='';
+  blist.forEach(({cat,n:cnt})=>{const contrib=cnt*cat.score;const r=document.createElement('div');r.className='brow';r.innerHTML=`<div class="bswatch" style="background:${cat.color}"></div><span class="bname">${cat.emoji} ${cat.name}</span><span class="bcount">${cnt}×</span><div class="bbar-wrap"><div class="bbar" style="width:${cnt/n*100}%;background:${cat.color}"></div></div><span class="bscore" style="color:${contrib>=0?'#5a9e3a':'#CF1820'}">${contrib>0?'+':''}${contrib}</span>`;br.appendChild(r);});
   const parts=blist.map(({cat,n:cnt})=>`${cnt}×(${cat.score>0?'+':''}${cat.score})`).join('+');
   document.getElementById('formulaText').innerHTML=`<code>${parts} = ${raw}</code><br>Normiert: <code>Score = ${norm}</code>`;
   document.getElementById('scoreCard').classList.remove('hidden');
-
   const tb=document.getElementById('debugBody');tb.innerHTML='';
-  cells.forEach(c=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${String.fromCharCode(65+c.row)}${c.col+1}</td><td>${c.h}°</td><td>${c.s}%</td><td>${c.l}%</td>
-      <td style="color:${c.cat.color}">${c.cat.emoji} ${c.cat.name}</td>
-      <td style="color:${c.cat.score>=0?'#5a9e3a':'#CF1820'};font-weight:700">${c.cat.score>0?'+':''}${c.cat.score}</td>`;
-    tb.appendChild(tr);
-  });
+  cells.forEach(c=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${String.fromCharCode(65+c.row)}${c.col+1}</td><td>${c.h}°</td><td>${c.s}%</td><td>${c.l}%</td><td style="color:${c.cat.color}">${c.cat.emoji} ${c.cat.name}</td><td style="color:${c.cat.score>=0?'#5a9e3a':'#CF1820'};font-weight:700">${c.cat.score>0?'+':''}${c.cat.score}</td>`;tb.appendChild(tr);});
   document.getElementById('debugCard').classList.remove('hidden');
   drawOverlay(cells,markerMode,markers);
 }
-
-// ─── OVERLAY ──────────────────────────────────────────────────────────────────
-function getGridPts(markers){
-  const sx=document.getElementById('overlayCanvas').width/VW;
-  const sy=document.getElementById('overlayCanvas').height/VH;
-  return [
-    gridCorner(markers['KS0'],'KS0'),
-    gridCorner(markers['KS1'],'KS1'),
-    gridCorner(markers['KS2'],'KS2'),
-    gridCorner(markers['KS3'],'KS3'),
-  ].map(p=>[p[0]*sx,p[1]*sy]);
-}
-
-function paintBoundary(ctx,pts,dim){
-  if(dim){
-    ctx.save();
-    ctx.fillStyle='rgba(0,0,0,0.45)';
-    ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
-    ctx.globalCompositeOperation='destination-out';
-    ctx.beginPath();
-    ctx.moveTo(pts[0][0],pts[0][1]);
-    for(let i=1;i<4;i++)ctx.lineTo(pts[i][0],pts[i][1]);
-    ctx.closePath();ctx.fill();
-    ctx.restore();
-  }
-  // Perspektivisches Grid
-  function lerp(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];}
-  ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;
-  for(let i=1;i<5;i++){
-    const t=i/5;
-    const t1=lerp(pts[0],pts[1],t),b1=lerp(pts[3],pts[2],t);
-    ctx.beginPath();ctx.moveTo(t1[0],t1[1]);ctx.lineTo(b1[0],b1[1]);ctx.stroke();
-    const l1=lerp(pts[0],pts[3],t),r1=lerp(pts[1],pts[2],t);
-    ctx.beginPath();ctx.moveTo(l1[0],l1[1]);ctx.lineTo(r1[0],r1[1]);ctx.stroke();
-  }
-  // Rahmen
-  ctx.beginPath();
-  ctx.moveTo(pts[0][0],pts[0][1]);
-  pts.forEach(p=>ctx.lineTo(p[0],p[1]));
-  ctx.closePath();
-  ctx.strokeStyle='#EC6525';ctx.lineWidth=2.5;ctx.stroke();
-  pts.forEach(p=>{
-    ctx.beginPath();ctx.arc(p[0],p[1],5,0,Math.PI*2);
-    ctx.fillStyle='#EC6525';ctx.fill();
-  });
-}
-
 function drawOverlay(cells,markerMode,markers){
-  const wrap=document.querySelector('.preview-wrap');
-  const cv=document.getElementById('overlayCanvas');
-  cv.width=wrap.clientWidth;cv.height=wrap.clientHeight;
-  const ctx=cv.getContext('2d');
-  ctx.clearRect(0,0,cv.width,cv.height);
+  const wrap=document.querySelector('.preview-wrap');const cv=document.getElementById('overlayCanvas');
+  cv.width=wrap.clientWidth;cv.height=wrap.clientHeight;const ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);
   if(markerMode&&markers){
-    paintBoundary(ctx,getGridPts(markers),true);
-  } else {
+    const sx=cv.width/640,sy=cv.height/480;
+    const pts=[innerCorner(markers['KS0'],'KS0'),innerCorner(markers['KS1'],'KS1'),innerCorner(markers['KS2'],'KS2'),innerCorner(markers['KS3'],'KS3')].map(p=>[p[0]*sx,p[1]*sy]);
+    ctx.save();ctx.fillStyle='rgba(0,0,0,0.45)';ctx.fillRect(0,0,cv.width,cv.height);ctx.globalCompositeOperation='destination-out';ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<4;i++)ctx.lineTo(pts[i][0],pts[i][1]);ctx.closePath();ctx.fill();ctx.restore();
+    function lerp(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];}
+    ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1;
+    for(let i=1;i<5;i++){const t=i/5;const t1=lerp(pts[0],pts[1],t),b1=lerp(pts[3],pts[2],t);ctx.beginPath();ctx.moveTo(t1[0],t1[1]);ctx.lineTo(b1[0],b1[1]);ctx.stroke();const l1=lerp(pts[0],pts[3],t),r1=lerp(pts[1],pts[2],t);ctx.beginPath();ctx.moveTo(l1[0],l1[1]);ctx.lineTo(r1[0],r1[1]);ctx.stroke();}
+    ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);pts.forEach(p=>ctx.lineTo(p[0],p[1]));ctx.closePath();ctx.strokeStyle='#EC6525';ctx.lineWidth=2.5;ctx.stroke();
+    pts.forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],5,0,Math.PI*2);ctx.fillStyle='#EC6525';ctx.fill();});
+  }else{
     const G=5,cw=cv.width/G,ch=cv.height/G;
-    cells.forEach(c=>{
-      const x=c.col*cw,y=c.row*ch;
-      ctx.strokeStyle=c.cat.color;ctx.lineWidth=2;
-      ctx.strokeRect(x+1,y+1,cw-2,ch-2);
-      ctx.fillStyle=c.cat.color+'33';ctx.fillRect(x+1,y+1,cw-2,ch-2);
-      ctx.fillStyle='white';
-      ctx.font=`bold ${Math.floor(ch*.28)}px system-ui`;
-      ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText(c.cat.emoji,x+cw/2,y+ch/2);
-    });
+    cells.forEach(c=>{const x=c.col*cw,y=c.row*ch;ctx.strokeStyle=c.cat.color;ctx.lineWidth=2;ctx.strokeRect(x+1,y+1,cw-2,ch-2);ctx.fillStyle=c.cat.color+'33';ctx.fillRect(x+1,y+1,cw-2,ch-2);ctx.fillStyle='white';ctx.font=`bold ${Math.floor(ch*.28)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(c.cat.emoji,x+cw/2,y+ch/2);});
   }
 }
-
 function drawLiveBoundary(markers){
-  const wrap=document.querySelector('.preview-wrap');
-  const cv=document.getElementById('overlayCanvas');
-  cv.width=wrap.clientWidth;cv.height=wrap.clientHeight;
-  const ctx=cv.getContext('2d');
-  ctx.clearRect(0,0,cv.width,cv.height);
-  paintBoundary(ctx,getGridPts(markers),true);
+  const wrap=document.querySelector('.preview-wrap');const cv=document.getElementById('overlayCanvas');
+  cv.width=wrap.clientWidth;cv.height=wrap.clientHeight;const ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);
+  const sx=cv.width/640,sy=cv.height/480;
+  const pts=[innerCorner(markers['KS0'],'KS0'),innerCorner(markers['KS1'],'KS1'),innerCorner(markers['KS2'],'KS2'),innerCorner(markers['KS3'],'KS3')].map(p=>[p[0]*sx,p[1]*sy]);
+  ctx.save();ctx.fillStyle='rgba(0,0,0,0.35)';ctx.fillRect(0,0,cv.width,cv.height);ctx.globalCompositeOperation='destination-out';ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<4;i++)ctx.lineTo(pts[i][0],pts[i][1]);ctx.closePath();ctx.fill();ctx.restore();
+  ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);pts.forEach(p=>ctx.lineTo(p[0],p[1]));ctx.closePath();ctx.strokeStyle='#EC6525';ctx.lineWidth=2.5;ctx.stroke();
+  pts.forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],5,0,Math.PI*2);ctx.fillStyle='#EC6525';ctx.fill();});
 }
-
-// ─── HAUPT-ANALYSE ────────────────────────────────────────────────────────────
-function doAnalysis(){
-  const video=document.getElementById('videoEl');
-  if(video.readyState<2)return;
-  const freshMarkers=detectMarkers(video);
-  const allMarkers=updateCache(freshMarkers);
-  const found=updateMarkerUI(freshMarkers,allMarkers);
-  let cells,markerMode=false;
-  if(found===4){
-    const warped=warpImage(video,allMarkers);
-    if(warped){cells=analyzeSource(warped);markerMode=true;}
-    else cells=analyzeSource(video);
-  } else {
-    cells=analyzeSource(video);
-  }
-  renderResults(cells,markerMode,markerMode?allMarkers:null);
-}
-
-// ─── STATE ────────────────────────────────────────────────────────────────────
 let stream=null,cameraOn=false,mode='snap',liveInterval=null,scanInterval=null;
-
-function setMode(m){
-  mode=m;
-  document.getElementById('btnSnap').classList.toggle('active',m==='snap');
-  document.getElementById('btnLive').classList.toggle('active',m==='live');
-  if(!cameraOn)return;
-  if(m==='live')document.getElementById('liveToggle').style.display='flex';
-  else{stopLive();document.getElementById('liveToggle').style.display='none';}
-}
+function setMode(m){mode=m;document.getElementById('btnSnap').classList.toggle('active',m==='snap');document.getElementById('btnLive').classList.toggle('active',m==='live');if(!cameraOn)return;if(m==='live')document.getElementById('liveToggle').style.display='flex';else{stopLive();document.getElementById('liveToggle').style.display='none';}}
+function doAnalysis(){const video=document.getElementById('videoEl');if(video.readyState<2)return;const markers=detectMarkers(video);const found=updateMarkerUI(markers);let cells,markerMode=false;if(found===4){const warped=warpImage(video,markers);if(warped){cells=analyzeSource(warped);markerMode=true;}else cells=analyzeSource(video);}else{cells=analyzeSource(video);}renderResults(cells,markerMode,markerMode?markers:null);}
 function toggleLive(){if(liveInterval)stopLive();else startLive();}
-function startLive(){
-  document.getElementById('liveToggle').classList.add('active');
-  document.getElementById('liveLabel').textContent='Live – Stop';
-  liveInterval=setInterval(doAnalysis,1500);
-}
-function stopLive(){
-  clearInterval(liveInterval);liveInterval=null;
-  document.getElementById('liveToggle').classList.remove('active');
-  document.getElementById('liveLabel').textContent='Live';
-}
-
-function startMarkerScan(){
-  scanInterval=setInterval(()=>{
-    const video=document.getElementById('videoEl');
-    if(video.readyState<2)return;
-    const fresh=detectMarkers(video);
-    const all=updateCache(fresh);
-    updateMarkerUI(fresh,all);
-    if(Object.keys(all).length===4) drawLiveBoundary(all);
-    else document.getElementById('overlayCanvas').getContext('2d').clearRect(0,0,9999,9999);
-  },500);
-}
-
-async function startCamera(){
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}},audio:false
-    });
-    const v=document.getElementById('videoEl');
-    v.srcObject=stream;v.style.display='block';
-    document.getElementById('placeholder').style.display='none';
-    document.getElementById('markerStatus').classList.add('visible');
-    document.getElementById('markerInfoCard').classList.remove('hidden');
-    cameraOn=true;
-    document.getElementById('mainBtn').textContent='📸 Snapshot & Analysieren';
-    document.getElementById('resetBtn').style.display='block';
-    if(mode==='live')document.getElementById('liveToggle').style.display='flex';
-    startMarkerScan();
-  }catch(e){
-    alert('Kamera-Zugriff nicht möglich.\nBitte GitHub Pages (HTTPS) nutzen.');
-  }
-}
+function startLive(){document.getElementById('liveToggle').classList.add('active');document.getElementById('liveLabel').textContent='Live – Stop';liveInterval=setInterval(doAnalysis,1500);}
+function stopLive(){clearInterval(liveInterval);liveInterval=null;document.getElementById('liveToggle').classList.remove('active');document.getElementById('liveLabel').textContent='Live';}
+function startMarkerScan(){scanInterval=setInterval(()=>{const video=document.getElementById('videoEl');if(video.readyState<2)return;const markers=detectMarkers(video);updateMarkerUI(markers);if(Object.keys(markers).length===4)drawLiveBoundary(markers);else document.getElementById('overlayCanvas').getContext('2d').clearRect(0,0,9999,9999);},500);}
+async function startCamera(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:960}},audio:false});const v=document.getElementById('videoEl');v.srcObject=stream;v.style.display='block';document.getElementById('placeholder').style.display='none';document.getElementById('markerStatus').classList.add('visible');document.getElementById('markerInfoCard').classList.remove('hidden');cameraOn=true;document.getElementById('mainBtn').textContent='📸 Snapshot & Analysieren';document.getElementById('resetBtn').style.display='block';startMarkerScan();}catch(e){alert('Kamera-Zugriff nicht möglich. Bitte GitHub Pages (HTTPS) nutzen.');}}
 function handleMain(){if(!cameraOn){startCamera();return;}doAnalysis();}
-function resetAll(){
-  stopLive();
-  clearInterval(scanInterval);scanInterval=null;
-  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
-  cameraOn=false;
-  markerCache={};cacheAge={};
-  const v=document.getElementById('videoEl');v.srcObject=null;v.style.display='none';
-  document.getElementById('overlayCanvas').getContext('2d').clearRect(0,0,9999,9999);
-  document.getElementById('placeholder').style.display='flex';
-  document.getElementById('markerStatus').classList.remove('visible');
-  document.getElementById('markerInfoCard').classList.add('hidden');
-  ['gridCard','scoreCard','debugCard'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-  document.getElementById('mainBtn').textContent='▶ Kamera starten';
-  document.getElementById('resetBtn').style.display='none';
-  document.getElementById('liveToggle').style.display='none';
-  ['mc0','mc1','mc2','mc3'].forEach((id,i)=>{
-    const el=document.getElementById(id);
-    el.className='m-chip';el.textContent='◻ KS'+i;
-  });
-  document.getElementById('mcAll').textContent='0/4';
-}
+function resetAll(){stopLive();clearInterval(scanInterval);scanInterval=null;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}cameraOn=false;const v=document.getElementById('videoEl');v.srcObject=null;v.style.display='none';document.getElementById('overlayCanvas').getContext('2d').clearRect(0,0,9999,9999);document.getElementById('placeholder').style.display='flex';document.getElementById('markerStatus').classList.remove('visible');document.getElementById('markerInfoCard').classList.add('hidden');['gridCard','scoreCard','debugCard'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('mainBtn').textContent='▶ Kamera starten';document.getElementById('resetBtn').style.display='none';['mc0','mc1','mc2','mc3'].forEach((id,i)=>{const el=document.getElementById(id);el.className='m-chip';el.textContent='◻ QR-'+i+' '+['TL','TR','BR','BL'][i];});document.getElementById('mcAll').textContent='0/4';}
 </script>
 </body>
 </html>
