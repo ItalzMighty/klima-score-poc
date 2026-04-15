@@ -45,7 +45,7 @@ main{padding:16px;max-width:480px;margin:0 auto;display:flex;flex-direction:colu
 .marker-status{
   display:none;padding:10px 16px;
   background:var(--surface2);border-bottom:1px solid var(--border);
-  font-size:12px;gap:6px;flex-wrap:wrap;
+  font-size:12px;gap:6px;flex-wrap:wrap;align-items:center;
 }
 .marker-status.visible{display:flex;}
 .m-chip{
@@ -61,7 +61,6 @@ main{padding:16px;max-width:480px;margin:0 auto;display:flex;flex-direction:colu
   background:linear-gradient(135deg,var(--red),var(--orange));
   color:white;font-size:15px;font-weight:700;transition:opacity .2s;
 }
-.btn-main:disabled{opacity:.4;cursor:not-allowed;}
 .btn-reset{
   padding:13px 16px;border-radius:12px;border:1px solid var(--border);
   background:var(--surface2);color:var(--muted);font-size:16px;cursor:pointer;display:none;
@@ -145,11 +144,11 @@ tr:last-child td{border-bottom:none;}
       </div>
     </div>
     <div class="marker-status" id="markerStatus">
-      <span id="mc0" class="m-chip">o KS0 TL</span>
-      <span id="mc1" class="m-chip">o KS1 TR</span>
-      <span id="mc2" class="m-chip">o KS2 BR</span>
-      <span id="mc3" class="m-chip">o KS3 BL</span>
-      <span id="mcAll" style="margin-left:auto;font-size:11px;color:var(--muted);align-self:center;">0/4</span>
+      <span id="mc0" class="m-chip">- KS0 TL</span>
+      <span id="mc1" class="m-chip">- KS1 TR</span>
+      <span id="mc2" class="m-chip">- KS2 BR</span>
+      <span id="mc3" class="m-chip">- KS3 BL</span>
+      <span id="mcAll" style="margin-left:auto;font-size:11px;color:var(--muted);">0/4</span>
     </div>
     <div class="preview-wrap">
       <video id="videoEl" autoplay playsinline muted></video>
@@ -168,13 +167,12 @@ tr:last-child td{border-bottom:none;}
   <div class="card hidden" id="markerInfoCard">
     <div class="card-header"><span class="card-title">Marker-Setup</span></div>
     <div class="info-box">
-      <strong>Marker-Positionen:</strong><br>
-      KS0 = Ecke oben links des Grids<br>
-      KS1 = Ecke oben rechts des Grids<br>
-      KS2 = Ecke unten rechts des Grids<br>
-      KS3 = Ecke unten links des Grids<br><br>
-      Die Marker definieren exakt die Grid-Grenzen. Alles ausserhalb wird ignoriert.
-      Bei 4/4 Markern: perspektivische Entzerrung aktiv.
+      <strong>Marker an die Grid-Ecken kleben:</strong><br>
+      KS0 = oben links &nbsp; KS1 = oben rechts<br>
+      KS2 = unten rechts &nbsp; KS3 = unten links<br><br>
+      Die App entzerrt das Bild perspektivisch und analysiert
+      <strong>ausschliesslich</strong> den Bereich zwischen den Markern.
+      Hintergrund und Umgebung werden vollstaendig ignoriert.
     </div>
   </div>
 
@@ -216,32 +214,33 @@ tr:last-child td{border-bottom:none;}
 </main>
 
 <canvas id="warpCanvas" style="display:none"></canvas>
+<canvas id="scanCanvas" style="display:none"></canvas>
 
 <script>
+// ============================================================
+// KATEGORIEN
+// ============================================================
 const CATS=[
-  {id:'green', name:'Gruenflaeche',    score:4,  color:'#5a9e3a',label:'Gruen',  match:(h,s,l)=>h>=75&&h<=165&&s>=25&&l>=15&&l<=75},
-  {id:'water', name:'Wasserflaeche',   score:3,  color:'#3a7abf',label:'Wasser', match:(h,s,l)=>h>=175&&h<=255&&s>=25&&l>=15&&l<=75},
-  {id:'low',   name:'Niedrig Bebaut',  score:-1, color:'#c9a227',label:'Niedrig',match:(h,s,l)=>h>=35&&h<75&&s>=20&&l>=40},
-  {id:'mid',   name:'Mittel Bebaut',   score:-2, color:'#8b5e3c',label:'Mittel', match:(h,s,l)=>h>=15&&h<45&&s>=15&&l>=20&&l<55},
-  {id:'dense', name:'Dicht Bebaut',    score:-3, color:'#4a4642',label:'Dicht',  match:(h,s,l)=>l<28},
-  {id:'sealed',name:'Versiegelt',      score:-4, color:'#7a7672',label:'Grau',   match:(h,s,l)=>s<14&&l>=28&&l<=78},
-  {id:'unknwn',name:'Unbekannt',       score:0,  color:'#3a3836',label:'?',      match:()=>true},
+  {id:'green', name:'Gruenflaeche',  score:4,  color:'#5a9e3a',label:'Gruen',  match:(h,s,l)=>h>=75&&h<=165&&s>=25&&l>=15&&l<=75},
+  {id:'water', name:'Wasserflaeche', score:3,  color:'#3a7abf',label:'Wasser', match:(h,s,l)=>h>=175&&h<=255&&s>=25&&l>=15&&l<=75},
+  {id:'low',   name:'Niedrig Bebaut',score:-1, color:'#c9a227',label:'Niedrig',match:(h,s,l)=>h>=35&&h<75&&s>=20&&l>=40},
+  {id:'mid',   name:'Mittel Bebaut', score:-2, color:'#8b5e3c',label:'Mittel', match:(h,s,l)=>h>=15&&h<45&&s>=15&&l>=20&&l<55},
+  {id:'dense', name:'Dicht Bebaut',  score:-3, color:'#4a4642',label:'Dicht',  match:(h,s,l)=>l<28},
+  {id:'sealed',name:'Versiegelt',    score:-4, color:'#7a7672',label:'Grau',   match:(h,s,l)=>s<14&&l>=28&&l<=78},
+  {id:'unknwn',name:'Unbekannt',     score:0,  color:'#3a3836',label:'?',      match:()=>true},
 ];
 function classify(h,s,l){for(const c of CATS)if(c.match(h,s,l))return c;return CATS[6];}
 
 function rgbToHsl(r,g,b){
   r/=255;g/=255;b/=255;
   const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
-  let h,s,l=(mx+mn)/2;
-  if(mx===mn){h=s=0;}
-  else{
+  let h=0,s=0,l=(mx+mn)/2;
+  if(mx!==mn){
     const d=mx-mn;
     s=l>.5?d/(2-mx-mn):d/(mx+mn);
-    switch(mx){
-      case r:h=((g-b)/d+(g<b?6:0))/6;break;
-      case g:h=((b-r)/d+2)/6;break;
-      case b:h=((r-g)/d+4)/6;break;
-    }
+    if(mx===r)h=((g-b)/d+(g<b?6:0))/6;
+    else if(mx===g)h=((b-r)/d+2)/6;
+    else h=((r-g)/d+4)/6;
   }
   return[Math.round(h*360),Math.round(s*100),Math.round(l*100)];
 }
@@ -255,75 +254,126 @@ function medianRGB(data,x,y,w,h,W){
   return[m(rs),m(gs),m(bs)];
 }
 
-// ---- QR DETECTION ----------------------------------------------------------
-// Each QR marker gives us its 4 corner points in image space.
-// We use the INNER corner of each marker (the corner pointing toward the grid)
-// as the homography source point - this ensures only the grid area is warped.
+// ============================================================
+// QR-ERKENNUNG – robust fuer Bildschirm-Anzeige
+// Strategie:
+// 1. Vollbild mit hoher Aufloesung scannen
+// 2. Kontrast-boosted Version scannen
+// 3. Invertierte Version scannen (Bildschirm-Reflexionen)
+// 4. Quadranten-Scan mit Overlap
+// 5. Alle gefundenen Codes sammeln, unabhaengig von Quadrant
+// ============================================================
 
-function getInnerCorner(loc, whichMarker) {
-  // whichMarker: 'TL'|'TR'|'BR'|'BL'
-  // Inner corner = the corner of the QR code closest to the center of the grid
-  const corners = [
-    loc.topLeftCorner,
-    loc.topRightCorner,
-    loc.bottomRightCorner,
-    loc.bottomLeftCorner
-  ];
-  // For each marker position, the inner (grid-facing) corner is:
-  // TL marker -> bottomRightCorner of the QR
-  // TR marker -> bottomLeftCorner of the QR
-  // BR marker -> topLeftCorner of the QR
-  // BL marker -> topRightCorner of the QR
-  const map = {TL:2, TR:3, BR:0, BL:1};
-  const c = corners[map[whichMarker]];
-  return [c.x, c.y];
+const SCAN_W=800, SCAN_H=600;
+
+function prepareFrame(videoEl){
+  const sc=document.getElementById('scanCanvas');
+  sc.width=SCAN_W;sc.height=SCAN_H;
+  const ctx=sc.getContext('2d');
+  ctx.drawImage(videoEl,0,0,SCAN_W,SCAN_H);
+  return {canvas:sc, ctx};
+}
+
+function contrastBoost(imgData){
+  // Increase contrast and sharpen for screen-captured QR codes
+  const d=imgData.data,len=d.length;
+  for(let i=0;i<len;i+=4){
+    // Convert to grayscale-weighted contrast boost
+    const factor=1.8;
+    d[i]  =Math.min(255,Math.max(0,factor*(d[i]-128)+128));
+    d[i+1]=Math.min(255,Math.max(0,factor*(d[i+1]-128)+128));
+    d[i+2]=Math.min(255,Math.max(0,factor*(d[i+2]-128)+128));
+  }
+  return imgData;
+}
+
+function invertPixels(imgData){
+  const d=imgData.data,len=d.length;
+  for(let i=0;i<len;i+=4){
+    d[i]=255-d[i];d[i+1]=255-d[i+1];d[i+2]=255-d[i+2];
+  }
+  return imgData;
+}
+
+function scanRegion(ctx,x,y,w,h,offsetX,offsetY){
+  // Returns array of {id, innerPt, loc} found in this region
+  const results=[];
+  const posMap={KS0:'TL',KS1:'TR',KS2:'BR',KS3:'BL'};
+
+  function tryDecode(imgData, ox, oy){
+    // Normal
+    let code=jsQR(imgData.data,w,h,{inversionAttempts:'dontInvert'});
+    if(code && posMap[code.data]) addResult(code,ox,oy);
+    // Inverted (for screens with inverted display or reflections)
+    code=jsQR(imgData.data,w,h,{inversionAttempts:'onlyInvert'});
+    if(code && posMap[code.data]) addResult(code,ox,oy);
+  }
+
+  function addResult(code,ox,oy){
+    if(results.find(r=>r.id===code.data))return;
+    const loc={
+      topLeftCorner:    {x:ox+code.location.topLeftCorner.x,    y:oy+code.location.topLeftCorner.y},
+      topRightCorner:   {x:ox+code.location.topRightCorner.x,   y:oy+code.location.topRightCorner.y},
+      bottomRightCorner:{x:ox+code.location.bottomRightCorner.x,y:oy+code.location.bottomRightCorner.y},
+      bottomLeftCorner: {x:ox+code.location.bottomLeftCorner.x, y:oy+code.location.bottomLeftCorner.y},
+    };
+    const pos=posMap[code.data];
+    const innerPt=getInnerCorner(loc,pos);
+    results.push({id:code.data,pos,innerPt,loc});
+  }
+
+  // Normal scan
+  let imgData=ctx.getImageData(x,y,w,h);
+  tryDecode(imgData,x,y);
+
+  // Contrast-boosted scan
+  let imgData2=ctx.getImageData(x,y,w,h);
+  contrastBoost(imgData2);
+  tryDecode(imgData2,x,y);
+
+  // Inverted scan
+  let imgData3=ctx.getImageData(x,y,w,h);
+  invertPixels(imgData3);
+  tryDecode(imgData3,x,y);
+
+  return results;
+}
+
+function getInnerCorner(loc, pos){
+  // Inner corner = QR corner facing toward grid center
+  // TL marker: bottom-right corner of QR faces grid
+  // TR marker: bottom-left corner faces grid
+  // BR marker: top-left corner faces grid
+  // BL marker: top-right corner faces grid
+  const map={TL:loc.bottomRightCorner, TR:loc.bottomLeftCorner,
+             BR:loc.topLeftCorner,     BL:loc.topRightCorner};
+  const c=map[pos];
+  return[c.x,c.y];
 }
 
 function detectMarkers(videoEl){
-  const VW=640,VH=480;
-  const sc=document.createElement('canvas');
-  sc.width=VW;sc.height=VH;
-  const ctx=sc.getContext('2d');
-  ctx.drawImage(videoEl,0,0,VW,VH);
-  const markers={};
+  const {ctx}=prepareFrame(videoEl);
+  const W=SCAN_W,H=SCAN_H;
+  const found={};
 
-  // Scan each quadrant for its expected marker
-  const regions=[
-    {x:0,   y:0,   w:320,h:240,id:'KS0',pos:'TL'},
-    {x:320, y:0,   w:320,h:240,id:'KS1',pos:'TR'},
-    {x:320, y:240, w:320,h:240,id:'KS2',pos:'BR'},
-    {x:0,   y:240, w:320,h:240,id:'KS3',pos:'BL'},
-  ];
-
-  for(const reg of regions){
-    const sub=ctx.getImageData(reg.x,reg.y,reg.w,reg.h);
-    const code=jsQR(sub.data,reg.w,reg.h,{inversionAttempts:'dontInvert'});
-    if(code && code.data.match(/^KS[0-3]$/)){
-      // Translate corner coords back to full image space
-      const loc={
-        topLeftCorner:    {x:reg.x+code.location.topLeftCorner.x,    y:reg.y+code.location.topLeftCorner.y},
-        topRightCorner:   {x:reg.x+code.location.topRightCorner.x,   y:reg.y+code.location.topRightCorner.y},
-        bottomRightCorner:{x:reg.x+code.location.bottomRightCorner.x,y:reg.y+code.location.bottomRightCorner.y},
-        bottomLeftCorner: {x:reg.x+code.location.bottomLeftCorner.x, y:reg.y+code.location.bottomLeftCorner.y},
-      };
-      const innerPt = getInnerCorner(loc, reg.pos);
-      markers[reg.id]={innerPt, loc, pos:reg.pos};
-    }
+  function merge(results){
+    results.forEach(r=>{if(!found[r.id])found[r.id]=r;});
   }
 
-  // Fallback: full-frame scan for any missed marker
-  const fullData=ctx.getImageData(0,0,VW,VH);
-  const fullCode=jsQR(fullData.data,VW,VH,{inversionAttempts:'dontInvert'});
-  if(fullCode && fullCode.data.match(/^KS[0-3]$/)){
-    const id=fullCode.data;
-    if(!markers[id]){
-      const posMap={KS0:'TL',KS1:'TR',KS2:'BR',KS3:'BL'};
-      const pos=posMap[id];
-      const innerPt=getInnerCorner(fullCode.location, pos);
-      markers[id]={innerPt, loc:fullCode.location, pos};
-    }
-  }
-  return markers;
+  // Full frame scan first (most reliable if markers are visible)
+  merge(scanRegion(ctx,0,0,W,H,0,0));
+
+  // Quadrant scans with 20% overlap to catch markers near center
+  const hw=Math.floor(W*0.55), hh=Math.floor(H*0.55);
+  const ox=W-hw, oy=H-hh;
+  merge(scanRegion(ctx, 0,  0,  hw,hh, 0,  0 ));  // TL quadrant
+  merge(scanRegion(ctx, ox, 0,  hw,hh, ox, 0 ));  // TR quadrant
+  merge(scanRegion(ctx, ox, oy, hw,hh, ox, oy));  // BR quadrant
+  merge(scanRegion(ctx, 0,  oy, hw,hh, 0,  oy));  // BL quadrant
+
+  // Scale from scan resolution back to 640x480 for homography
+  // (homography uses display-relative coords via overlay scaling)
+  return found;
 }
 
 function updateMarkerUI(markers){
@@ -341,7 +391,9 @@ function updateMarkerUI(markers){
   return found;
 }
 
-// ---- HOMOGRAPHY ------------------------------------------------------------
+// ============================================================
+// HOMOGRAPHIE
+// ============================================================
 function computeHomography(src,dst){
   const A=[],b=[];
   for(let i=0;i<4;i++){
@@ -354,7 +406,6 @@ function computeHomography(src,dst){
   if(!h)return null;
   return[h[0],h[1],h[2],h[3],h[4],h[5],h[6],h[7],1];
 }
-
 function solveLinear8(A,b){
   const n=8,M=A.map((row,i)=>[...row,b[i]]);
   for(let col=0;col<n;col++){
@@ -374,7 +425,6 @@ function solveLinear8(A,b){
   }
   return x;
 }
-
 function invertH(H){
   const[a,b,c,d,e,f,g,h,ii]=[H[0],H[1],H[2],H[3],H[4],H[5],H[6],H[7],H[8]];
   const det=a*(e*ii-f*h)-b*(d*ii-f*g)+c*(d*h-e*g);
@@ -386,15 +436,17 @@ function invertH(H){
   ];
 }
 
-function warpToGrid(videoEl, markers){
-  const S=400, VW=640, VH=480;
-  // Use INNER corners of each marker as source points
-  // This maps exactly the grid area (between markers) to the output canvas
+// ============================================================
+// WARP – nur der Grid-Bereich zwischen den inneren Marker-Ecken
+// ============================================================
+function warpToGrid(videoEl,markers){
+  const S=500;
+  // Inner corners in SCAN space (800x600)
   const src=[
-    markers['KS0'].innerPt,  // TL inner corner -> maps to (0,0)
-    markers['KS1'].innerPt,  // TR inner corner -> maps to (S,0)
-    markers['KS2'].innerPt,  // BR inner corner -> maps to (S,S)
-    markers['KS3'].innerPt,  // BL inner corner -> maps to (0,S)
+    markers['KS0'].innerPt,
+    markers['KS1'].innerPt,
+    markers['KS2'].innerPt,
+    markers['KS3'].innerPt,
   ];
   const dst=[[0,0],[S,0],[S,S],[0,S]];
   const H=computeHomography(src,dst);
@@ -402,48 +454,59 @@ function warpToGrid(videoEl, markers){
   const Hinv=invertH(H);
   if(!Hinv)return null;
 
-  const srcC=document.createElement('canvas');srcC.width=VW;srcC.height=VH;
-  srcC.getContext('2d').drawImage(videoEl,0,0,VW,VH);
-  const srcPx=srcC.getContext('2d').getImageData(0,0,VW,VH);
+  // Render video at scan resolution
+  const srcC=document.getElementById('scanCanvas');
+  // scanCanvas already has current frame from detectMarkers
+  const srcPx=srcC.getContext('2d').getImageData(0,0,SCAN_W,SCAN_H);
 
   const wc=document.getElementById('warpCanvas');
   wc.width=S;wc.height=S;
   const wctx=wc.getContext('2d');
-  const dst2=wctx.createImageData(S,S);
+  const out=wctx.createImageData(S,S);
 
   for(let dy=0;dy<S;dy++)for(let dx=0;dx<S;dx++){
     const denom=Hinv[6]*dx+Hinv[7]*dy+Hinv[8];
     const sx=Math.round((Hinv[0]*dx+Hinv[1]*dy+Hinv[2])/denom);
     const sy=Math.round((Hinv[3]*dx+Hinv[4]*dy+Hinv[5])/denom);
-    if(sx>=0&&sx<VW&&sy>=0&&sy<VH){
-      const si=(sy*VW+sx)*4, di=(dy*S+dx)*4;
-      dst2.data[di]=srcPx.data[si];
-      dst2.data[di+1]=srcPx.data[si+1];
-      dst2.data[di+2]=srcPx.data[si+2];
-      dst2.data[di+3]=255;
+    if(sx>=0&&sx<SCAN_W&&sy>=0&&sy<SCAN_H){
+      const si=(sy*SCAN_W+sx)*4,di=(dy*S+dx)*4;
+      out.data[di]=srcPx.data[si];
+      out.data[di+1]=srcPx.data[si+1];
+      out.data[di+2]=srcPx.data[si+2];
+      out.data[di+3]=255;
     }
   }
-  wctx.putImageData(dst2,0,0);
+  wctx.putImageData(out,0,0);
   return wc;
 }
 
-// ---- ANALYSE ----------------------------------------------------------------
+// ============================================================
+// ANALYSE – nur der entzerrte Grid-Canvas
+// ============================================================
 function analyzeCanvas(src){
-  const G=5,S=300;
+  const G=5,S=500;
   const off=document.createElement('canvas');off.width=S;off.height=S;
   off.getContext('2d').drawImage(src,0,0,S,S);
   const d=off.getContext('2d').getImageData(0,0,S,S).data;
   const cw=S/G,ch=S/G;
+  // Sample center 60% of each cell to avoid edge bleed
+  const margin=0.2;
   return Array.from({length:G},(_,row)=>Array.from({length:G},(_,col)=>{
-    const[r,g,b]=medianRGB(d,Math.floor(col*cw),Math.floor(row*ch),Math.floor(cw),Math.floor(ch),S);
+    const x0=Math.floor(col*cw+cw*margin);
+    const y0=Math.floor(row*ch+ch*margin);
+    const sw=Math.floor(cw*(1-2*margin));
+    const sh=Math.floor(ch*(1-2*margin));
+    const[r,g,b]=medianRGB(d,x0,y0,sw,sh,S);
     const[hh,s,l]=rgbToHsl(r,g,b);
     return{row,col,h:hh,s,l,cat:classify(hh,s,l)};
   })).flat();
 }
 
-// ---- RENDER -----------------------------------------------------------------
-function renderResults(cells, markerMode, markers){
-  document.getElementById('gridMode').textContent = markerMode ? 'Marker aktiv' : 'Fallback';
+// ============================================================
+// RENDER
+// ============================================================
+function renderResults(cells,markerMode,markers){
+  document.getElementById('gridMode').textContent=markerMode?'Marker aktiv':'Fallback (kein Marker)';
   const grid=document.getElementById('cellGrid');grid.innerHTML='';
   cells.forEach(c=>{
     const d=document.createElement('div');d.className='cell';
@@ -486,96 +549,78 @@ function renderResults(cells, markerMode, markers){
       +'<span class="bscore" style="color:'+(contrib>=0?'#5a9e3a':'#CF1820')+'">'+(contrib>0?'+':'')+contrib+'</span>';
     br.appendChild(r);
   });
-  const parts=blist.map(({cat,n:cnt})=>cnt+'x('+(cat.score>0?'+':'')+cat.score+')').join('+');
+  const parts=blist.map(({cat,n:cnt})=>cnt+'x('+(cat.score>0?'+':'')+cat.score+')').join(' + ');
   document.getElementById('formulaText').innerHTML='<code>'+parts+' = '+raw+'</code><br>Normiert: <code>Score = '+norm+'</code>';
   document.getElementById('scoreCard').classList.remove('hidden');
 
   const tb=document.getElementById('debugBody');tb.innerHTML='';
   cells.forEach(c=>{
     const tr=document.createElement('tr');
-    tr.innerHTML='<td>'+String.fromCharCode(65+c.row)+(c.col+1)+'</td><td>'+c.h+'</td><td>'+c.s+'</td><td>'+c.l+'</td>'
+    tr.innerHTML='<td>'+String.fromCharCode(65+c.row)+(c.col+1)+'</td>'
+      +'<td>'+c.h+'</td><td>'+c.s+'</td><td>'+c.l+'</td>'
       +'<td style="color:'+c.cat.color+'">'+c.cat.name+'</td>'
       +'<td style="color:'+(c.cat.score>=0?'#5a9e3a':'#CF1820')+';font-weight:700">'+(c.cat.score>0?'+':'')+c.cat.score+'</td>';
     tb.appendChild(tr);
   });
   document.getElementById('debugCard').classList.remove('hidden');
-  drawOverlay(cells, markerMode, markers);
+  drawOverlay(cells,markerMode,markers);
 }
 
-function drawOverlay(cells, markerMode, markers){
+// ============================================================
+// OVERLAY – zeigt Grid-Grenze live auf dem Kamerabild
+// ============================================================
+function drawOverlay(cells,markerMode,markers){
   const wrap=document.querySelector('.preview-wrap');
   const cv=document.getElementById('overlayCanvas');
   cv.width=wrap.clientWidth;cv.height=wrap.clientHeight;
   const ctx=cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
 
-  if(markerMode && markers){
-    // Draw the detected grid boundary polygon on the camera view
-    // Scale from 640x480 detection space to display canvas space
-    const scaleX=cv.width/640, scaleY=cv.height/480;
+  if(markerMode&&markers){
+    // Scale from scan space (800x600) to display canvas
+    const sx=cv.width/SCAN_W, sy=cv.height/SCAN_H;
     const pts=[
       markers['KS0'].innerPt,
       markers['KS1'].innerPt,
       markers['KS2'].innerPt,
       markers['KS3'].innerPt,
-    ];
-    // Dim everything OUTSIDE the grid boundary
+    ].map(p=>[p[0]*sx,p[1]*sy]);
+
+    // Abdunkeln ausserhalb Grid
     ctx.save();
-    ctx.fillStyle='rgba(0,0,0,0.45)';
+    ctx.fillStyle='rgba(0,0,0,0.5)';
     ctx.fillRect(0,0,cv.width,cv.height);
     ctx.globalCompositeOperation='destination-out';
     ctx.beginPath();
-    ctx.moveTo(pts[0][0]*scaleX, pts[0][1]*scaleY);
-    ctx.lineTo(pts[1][0]*scaleX, pts[1][1]*scaleY);
-    ctx.lineTo(pts[2][0]*scaleX, pts[2][1]*scaleY);
-    ctx.lineTo(pts[3][0]*scaleX, pts[3][1]*scaleY);
-    ctx.closePath();
-    ctx.fill();
+    ctx.moveTo(pts[0][0],pts[0][1]);
+    pts.slice(1).forEach(p=>ctx.lineTo(p[0],p[1]));
+    ctx.closePath();ctx.fill();
     ctx.restore();
 
-    // Draw grid lines inside the polygon using perspective-correct grid
+    // Perspektivisch korrekte Grid-Linien
     const G=5;
-    function lerp(a,b,t){return[a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t];}
-    // Top edge: KS0->KS1, Bottom edge: KS3->KS2
+    function lerp(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];}
+    ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;
     for(let i=1;i<G;i++){
       const t=i/G;
-      const topPt=lerp(pts[0],pts[1],t);
-      const botPt=lerp(pts[3],pts[2],t);
-      ctx.beginPath();
-      ctx.moveTo(topPt[0]*scaleX,topPt[1]*scaleY);
-      ctx.lineTo(botPt[0]*scaleX,botPt[1]*scaleY);
-      ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1;
-      ctx.stroke();
+      const t1=lerp(pts[0],pts[1],t),b1=lerp(pts[3],pts[2],t);
+      ctx.beginPath();ctx.moveTo(t1[0],t1[1]);ctx.lineTo(b1[0],b1[1]);ctx.stroke();
+      const l1=lerp(pts[0],pts[3],t),r1=lerp(pts[1],pts[2],t);
+      ctx.beginPath();ctx.moveTo(l1[0],l1[1]);ctx.lineTo(r1[0],r1[1]);ctx.stroke();
     }
-    // Left edge: KS0->KS3, Right edge: KS1->KS2
-    for(let i=1;i<G;i++){
-      const t=i/G;
-      const leftPt=lerp(pts[0],pts[3],t);
-      const rightPt=lerp(pts[1],pts[2],t);
-      ctx.beginPath();
-      ctx.moveTo(leftPt[0]*scaleX,leftPt[1]*scaleY);
-      ctx.lineTo(rightPt[0]*scaleX,rightPt[1]*scaleY);
-      ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1;
-      ctx.stroke();
-    }
-    // Outer boundary
+    // Rahmen orange
     ctx.beginPath();
-    ctx.moveTo(pts[0][0]*scaleX,pts[0][1]*scaleY);
-    ctx.lineTo(pts[1][0]*scaleX,pts[1][1]*scaleY);
-    ctx.lineTo(pts[2][0]*scaleX,pts[2][1]*scaleY);
-    ctx.lineTo(pts[3][0]*scaleX,pts[3][1]*scaleY);
+    ctx.moveTo(pts[0][0],pts[0][1]);
+    pts.forEach(p=>ctx.lineTo(p[0],p[1]));
     ctx.closePath();
-    ctx.strokeStyle='rgba(236,101,37,0.9)';ctx.lineWidth=2;ctx.stroke();
-
-    // Marker dots
-    pts.forEach((p,i)=>{
-      ctx.beginPath();
-      ctx.arc(p[0]*scaleX,p[1]*scaleY,5,0,Math.PI*2);
+    ctx.strokeStyle='#EC6525';ctx.lineWidth=2.5;ctx.stroke();
+    // Ecken-Dots
+    pts.forEach(p=>{
+      ctx.beginPath();ctx.arc(p[0],p[1],5,0,Math.PI*2);
       ctx.fillStyle='#EC6525';ctx.fill();
     });
-
   } else {
-    // Fallback: simple grid overlay
+    // Fallback: einfaches gleichmaessiges Grid
     const G=5,cw=cv.width/G,ch=cv.height/G;
     cells.forEach(c=>{
       const x=c.col*cw,y=c.row*ch;
@@ -590,8 +635,46 @@ function drawOverlay(cells, markerMode, markers){
   }
 }
 
-// ---- STATE ------------------------------------------------------------------
+// Live-Overlay waehrend Kamera laeuft (nur Grid-Rahmen, keine Analyse)
+function drawLiveBoundary(markers){
+  const found=Object.keys(markers).length;
+  if(found<4)return;
+  const wrap=document.querySelector('.preview-wrap');
+  const cv=document.getElementById('overlayCanvas');
+  cv.width=wrap.clientWidth;cv.height=wrap.clientHeight;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const sx=cv.width/SCAN_W,sy=cv.height/SCAN_H;
+  const pts=[
+    markers['KS0'].innerPt,
+    markers['KS1'].innerPt,
+    markers['KS2'].innerPt,
+    markers['KS3'].innerPt,
+  ].map(p=>[p[0]*sx,p[1]*sy]);
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.globalCompositeOperation='destination-out';
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0],pts[0][1]);
+  pts.slice(1).forEach(p=>ctx.lineTo(p[0],p[1]));
+  ctx.closePath();ctx.fill();ctx.restore();
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0],pts[0][1]);
+  pts.forEach(p=>ctx.lineTo(p[0],p[1]));
+  ctx.closePath();
+  ctx.strokeStyle='#EC6525';ctx.lineWidth=2.5;ctx.stroke();
+  pts.forEach(p=>{
+    ctx.beginPath();ctx.arc(p[0],p[1],5,0,Math.PI*2);
+    ctx.fillStyle='#EC6525';ctx.fill();
+  });
+}
+
+// ============================================================
+// STATE
+// ============================================================
 let stream=null,cameraOn=false,mode='snap',liveInterval=null,scanInterval=null;
+let lastMarkers={};
 
 function setMode(m){
   mode=m;
@@ -601,8 +684,6 @@ function setMode(m){
   if(m==='live'){document.getElementById('liveToggle').style.display='flex';}
   else{stopLive();document.getElementById('liveToggle').style.display='none';}
 }
-
-let lastMarkers={};
 
 function doAnalysis(){
   const video=document.getElementById('videoEl');
@@ -614,9 +695,9 @@ function doAnalysis(){
   if(found===4){
     const warped=warpToGrid(video,markers);
     if(warped){cells=analyzeCanvas(warped);markerMode=true;}
-    else cells=analyzeCanvas(video);
+    else cells=analyzeCanvas(document.getElementById('scanCanvas'));
   } else {
-    cells=analyzeCanvas(video);
+    cells=analyzeCanvas(document.getElementById('scanCanvas'));
   }
   renderResults(cells,markerMode,markerMode?markers:null);
 }
@@ -624,8 +705,8 @@ function doAnalysis(){
 function toggleLive(){if(liveInterval)stopLive();else startLive();}
 function startLive(){
   document.getElementById('liveToggle').classList.add('active');
-  document.getElementById('liveLabel').textContent='Live - Stop';
-  liveInterval=setInterval(doAnalysis,1500);
+  document.getElementById('liveLabel').textContent='Stop Live';
+  liveInterval=setInterval(doAnalysis,1800);
 }
 function stopLive(){
   clearInterval(liveInterval);liveInterval=null;
@@ -640,12 +721,15 @@ function startMarkerScan(){
     const markers=detectMarkers(video);
     lastMarkers=markers;
     updateMarkerUI(markers);
-  },600);
+    if(Object.keys(markers).length===4)drawLiveBoundary(markers);
+  },700);
 }
 
 async function startCamera(){
   try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:1280,height:960},audio:false});
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}},audio:false
+    });
     const v=document.getElementById('videoEl');
     v.srcObject=stream;v.style.display='block';
     document.getElementById('placeholder').style.display='none';
@@ -657,14 +741,11 @@ async function startCamera(){
     if(mode==='live')document.getElementById('liveToggle').style.display='flex';
     startMarkerScan();
   }catch(e){
-    alert('Kamera-Zugriff nicht moeglich. Bitte GitHub Pages URL nutzen (HTTPS erforderlich).');
+    alert('Kamera-Zugriff nicht moeglich. Bitte HTTPS nutzen (GitHub Pages).');
   }
 }
 
-function handleMain(){
-  if(!cameraOn){startCamera();return;}
-  doAnalysis();
-}
+function handleMain(){if(!cameraOn){startCamera();return;}doAnalysis();}
 
 function resetAll(){
   stopLive();
@@ -672,7 +753,8 @@ function resetAll(){
   if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
   cameraOn=false;lastMarkers={};
   const v=document.getElementById('videoEl');v.srcObject=null;v.style.display='none';
-  document.getElementById('overlayCanvas').getContext('2d').clearRect(0,0,9999,9999);
+  const cv=document.getElementById('overlayCanvas');
+  cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
   document.getElementById('placeholder').style.display='flex';
   document.getElementById('markerStatus').classList.remove('visible');
   document.getElementById('markerInfoCard').classList.add('hidden');
@@ -682,7 +764,7 @@ function resetAll(){
   document.getElementById('liveToggle').style.display='none';
   ['mc0','mc1','mc2','mc3'].forEach((id,i)=>{
     const el=document.getElementById(id);
-    el.className='m-chip';el.textContent='o KS'+i+' '+['TL','TR','BR','BL'][i];
+    el.className='m-chip';el.textContent='- KS'+i+' '+['TL','TR','BR','BL'][i];
   });
   document.getElementById('mcAll').textContent='0/4';
 }
