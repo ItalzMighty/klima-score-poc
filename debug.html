@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>QR Debug Tool</title>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<style>
+:root{
+  --red:#CF1820;--orange:#EC6525;--purple:#AF368C;
+  --bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;
+  --border:#2a2a2a;--text:#f0efed;--muted:#777;
+  --green:#4caf50;--yellow:#ffb300;--blue:#42a5f5;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;font-size:13px;min-height:100dvh;}
+header{background:var(--surface);border-bottom:2px solid var(--orange);padding:12px 16px;display:flex;align-items:center;gap:10px;}
+.logo-bars{display:flex;gap:3px;}
+.logo-bars span{width:12px;height:3px;border-radius:2px;display:block;}
+h1{font-size:14px;font-weight:700;letter-spacing:.05em;}
+h1 span{color:var(--orange);}
+.tag{font-size:10px;padding:2px 8px;border-radius:3px;background:var(--orange);color:white;font-weight:700;letter-spacing:.05em;margin-left:8px;}
+main{padding:12px;max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:12px;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.panel-title{padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.1em;display:flex;justify-content:space-between;align-items:center;}
+.panel-body{padding:12px;}
+.btn{
+  padding:10px 20px;border-radius:6px;border:none;cursor:pointer;font-family:inherit;
+  font-size:13px;font-weight:700;letter-spacing:.03em;transition:opacity .2s;
+}
+.btn-primary{background:linear-gradient(135deg,var(--red),var(--orange));color:white;}
+.btn-secondary{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+/* Video / Canvas previews */
+.preview-wrap{position:relative;aspect-ratio:4/3;background:#000;border-radius:4px;overflow:hidden;}
+#videoEl{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;}
+.canvas-preview{width:100%;border-radius:4px;display:block;background:#111;}
+/* Log */
+.log{background:#000;border-radius:4px;padding:10px;font-size:11px;line-height:1.8;max-height:320px;overflow-y:auto;}
+.log-line{display:flex;gap:8px;border-bottom:1px solid #111;padding:3px 0;}
+.log-ts{color:#555;min-width:50px;}
+.log-tag{min-width:70px;font-weight:700;}
+.ok{color:var(--green);}
+.warn{color:var(--yellow);}
+.err{color:var(--red);}
+.info{color:var(--blue);}
+/* QR detail */
+.qr-found{background:#0a1a0a;border:1px solid #2a4a2a;border-radius:6px;padding:10px;margin-bottom:8px;}
+.qr-found h4{color:var(--green);margin-bottom:6px;font-size:12px;}
+.coord-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;}
+.coord{background:#111;border-radius:4px;padding:4px 8px;font-size:11px;}
+.coord span{color:var(--muted);}
+.qr-missing{background:#1a0a0a;border:1px solid #4a2a2a;border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:11px;color:#e05050;}
+/* Canvas row */
+.canvas-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.canvas-label{font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
+/* HSL Table */
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{text-align:left;color:var(--muted);padding:4px 6px;border-bottom:1px solid var(--border);font-size:10px;}
+td{padding:4px 6px;border-bottom:1px solid #111;}
+tr:last-child td{border-bottom:none;}
+.swatch{width:12px;height:12px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:4px;}
+/* Score bar */
+.score-bar-wrap{height:20px;background:#111;border-radius:100px;overflow:hidden;margin:8px 0;}
+.score-bar{height:100%;border-radius:100px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:11px;font-weight:700;color:white;transition:width .5s;}
+.big-score{font-size:36px;font-weight:900;text-align:center;padding:16px 0 4px;}
+.score-label{text-align:center;font-size:12px;color:var(--muted);margin-bottom:8px;}
+.hidden{display:none!important;}
+/* Overlay canvas on snapshot */
+#snapOverlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-bars">
+    <span style="background:#CF1820"></span>
+    <span style="background:#EC6525"></span>
+    <span style="background:#AF368C"></span>
+  </div>
+  <h1>Klima-Score <span>DEBUG</span><span class="tag">QR</span></h1>
+</header>
+<main>
+
+  <!-- 1. KAMERA -->
+  <div class="panel">
+    <div class="panel-title">1 — Kamera &amp; Snapshot</div>
+    <div class="panel-body">
+      <div class="preview-wrap" id="previewWrap">
+        <video id="videoEl" autoplay playsinline muted></video>
+        <canvas id="snapOverlay"></canvas>
+      </div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn btn-primary" id="btnStart" onclick="startCam()">&#9654; Kamera starten</button>
+        <button class="btn btn-primary hidden" id="btnSnap" onclick="doSnapshot()">&#128248; Snapshot analysieren</button>
+        <button class="btn btn-secondary hidden" id="btnReset" onclick="resetAll()">&#8635; Reset</button>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--muted)" id="camInfo"></div>
+    </div>
+  </div>
+
+  <!-- 2. SCAN LOG -->
+  <div class="panel hidden" id="panelLog">
+    <div class="panel-title">2 — QR Scan Log</div>
+    <div class="panel-body">
+      <div class="log" id="logEl"></div>
+    </div>
+  </div>
+
+  <!-- 3. QR ERGEBNISSE -->
+  <div class="panel hidden" id="panelQR">
+    <div class="panel-title">
+      <span>3 — Marker-Positionen</span>
+      <span id="qrCount" style="color:var(--muted)">0/4</span>
+    </div>
+    <div class="panel-body" id="qrResults"></div>
+  </div>
+
+  <!-- 4. CANVAS PREVIEWS -->
+  <div class="panel hidden" id="panelCanvas">
+    <div class="panel-title">4 — Canvas Vorschau</div>
+    <div class="panel-body">
+      <div class="canvas-row">
+        <div>
+          <div class="canvas-label">Snapshot (640×480)</div>
+          <canvas id="snapCanvas" class="canvas-preview" width="640" height="480"></canvas>
+        </div>
+        <div>
+          <div class="canvas-label" id="warpLabel">Warp-Output (400×400)</div>
+          <canvas id="warpPreview" class="canvas-preview" width="400" height="400"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. HSL TABELLE -->
+  <div class="panel hidden" id="panelHSL">
+    <div class="panel-title">5 — HSL je Zelle (5×5)</div>
+    <div class="panel-body" style="padding:0 0 8px;overflow-x:auto;">
+      <table>
+        <thead><tr><th>Zelle</th><th>H°</th><th>S%</th><th>L%</th><th>R</th><th>G</th><th>B</th><th>Kategorie</th><th>Score</th></tr></thead>
+        <tbody id="hslBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6. SCORE -->
+  <div class="panel hidden" id="panelScore">
+    <div class="panel-title">6 — Klima-Score</div>
+    <div class="panel-body">
+      <div class="big-score" id="bigScore">–</div>
+      <div class="score-label" id="scoreLabel">–</div>
+      <div class="score-bar-wrap"><div class="score-bar" id="scoreBar" style="width:50%;background:#555">–</div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>🔴 −100</span><span>+100 🟢</span></div>
+    </div>
+  </div>
+
+</main>
+<canvas id="warpCanvas" style="display:none"></canvas>
+<script>
+// ─── KATEGORIEN
+const CATS=[
+  {id:'green', name:'Grünfläche',        score:4,  color:'#5a9e3a',emoji:'🌿',match:(h,s,l)=>h>=75&&h<=165&&s>=25&&l>=15&&l<=75},
+  {id:'water', name:'Wasserfläche',       score:3,  color:'#3a7abf',emoji:'💧',match:(h,s,l)=>h>=175&&h<=255&&s>=25&&l>=15&&l<=75},
+  {id:'low',   name:'Niedrige Bebauung', score:-1, color:'#c9a227',emoji:'🏠',match:(h,s,l)=>h>=35&&h<75&&s>=20&&l>=40},
+  {id:'mid',   name:'Mittlere Bebauung', score:-2, color:'#8b5e3c',emoji:'🏢',match:(h,s,l)=>h>=15&&h<45&&s>=15&&l>=20&&l<55},
+  {id:'dense', name:'Dichte Bebauung',   score:-3, color:'#4a4642',emoji:'🏙️',match:(h,s,l)=>l<28},
+  {id:'sealed',name:'Versiegelt',        score:-4, color:'#7a7672',emoji:'🛣️',match:(h,s,l)=>s<14&&l>=28&&l<=78},
+  {id:'unknown',name:'Unbekannt',        score:0,  color:'#3a3836',emoji:'❓',match:()=>true},
+];
+function classify(h,s,l){for(const c of CATS)if(c.match(h,s,l))return c;return CATS[6];}
+function rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+  let h,s,l=(mx+mn)/2;
+  if(mx===mn){h=s=0;}else{
+    const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);
+    switch(mx){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;case b:h=((r-g)/d+4)/6;break;}
+  }
+  return[Math.round(h*360),Math.round(s*100),Math.round(l*100)];
+}
+function medianRGB(data,x,y,w,h,W){
+  const rs=[],gs=[],bs=[];
+  for(let row=y;row<y+h;row++)for(let col=x;col<x+w;col++){const i=(row*W+col)*4;rs.push(data[i]);gs.push(data[i+1]);bs.push(data[i+2]);}
+  const m=a=>{a.sort((a,b)=>a-b);return a[Math.floor(a.length/2)];};
+  return[m(rs),m(gs),m(bs)];
+}
+
+// ─── LOG
+const logLines=[];
+function log(tag,cls,msg){
+  logLines.push({tag,cls,msg});
+  const el=document.getElementById('logEl');
+  const line=document.createElement('div');line.className='log-line';
+  line.innerHTML=`<span class="log-ts">${String(logLines.length).padStart(3,'0')}</span><span class="log-tag ${cls}">[${tag}]</span><span>${msg}</span>`;
+  el.appendChild(line);el.scrollTop=el.scrollHeight;
+  document.getElementById('panelLog').classList.remove('hidden');
+}
+
+// ─── QR SCAN  (identisch mit main - KEINE Änderungen)
+function detectMarkers(ctx, imgData){
+  const markers={};
+  const regions=[
+    {x:0,   y:0,   w:320,h:240,label:'Q0-TL'},
+    {x:320, y:0,   w:320,h:240,label:'Q1-TR'},
+    {x:320, y:240, w:320,h:240,label:'Q2-BR'},
+    {x:0,   y:240, w:320,h:240,label:'Q3-BL'},
+  ];
+  for(const reg of regions){
+    const sub=ctx.getImageData(reg.x,reg.y,reg.w,reg.h);
+    const code=jsQR(sub.data,reg.w,reg.h,{inversionAttempts:'dontInvert'});
+    if(code){
+      if(code.data.match(/^KS[0-3]$/)){
+        const loc=code.location;
+        const fullLoc={
+          topLeftCorner:     {x:reg.x+loc.topLeftCorner.x,     y:reg.y+loc.topLeftCorner.y},
+          topRightCorner:    {x:reg.x+loc.topRightCorner.x,    y:reg.y+loc.topRightCorner.y},
+          bottomRightCorner: {x:reg.x+loc.bottomRightCorner.x, y:reg.y+loc.bottomRightCorner.y},
+          bottomLeftCorner:  {x:reg.x+loc.bottomLeftCorner.x,  y:reg.y+loc.bottomLeftCorner.y},
+        };
+        const cx=(fullLoc.topLeftCorner.x+fullLoc.topRightCorner.x+fullLoc.bottomRightCorner.x+fullLoc.bottomLeftCorner.x)/4;
+        const cy=(fullLoc.topLeftCorner.y+fullLoc.topRightCorner.y+fullLoc.bottomRightCorner.y+fullLoc.bottomLeftCorner.y)/4;
+        markers[code.data]={cx,cy,loc:fullLoc};
+        log('SCAN',  'ok', `${reg.label} → ✓ ${code.data} @ cx=${cx.toFixed(0)} cy=${cy.toFixed(0)}`);
+      } else {
+        log('SCAN','warn',`${reg.label} → Unbekannter Code: "${code.data}"`);
+      }
+    } else {
+      log('SCAN','err',`${reg.label} → kein QR`);
+    }
+  }
+  // Vollbild-Fallback
+  const fullCode=jsQR(imgData.data,640,480,{inversionAttempts:'dontInvert'});
+  if(fullCode){
+    if(fullCode.data.match(/^KS[0-3]$/)&&!markers[fullCode.data]){
+      const loc=fullCode.location;
+      const cx=(loc.topLeftCorner.x+loc.topRightCorner.x+loc.bottomRightCorner.x+loc.bottomLeftCorner.x)/4;
+      const cy=(loc.topLeftCorner.y+loc.topRightCorner.y+loc.bottomRightCorner.y+loc.bottomLeftCorner.y)/4;
+      markers[fullCode.data]={cx,cy,loc};
+      log('FULL ','ok',`Vollbild → ✓ ${fullCode.data} @ cx=${cx.toFixed(0)} cy=${cy.toFixed(0)} (Fallback)`);
+    } else if(!fullCode.data.match(/^KS[0-3]$/)) {
+      log('FULL ','warn',`Vollbild → Code: "${fullCode.data}" (kein KS-Marker)`);
+    }
+  } else {
+    log('FULL ','info','Vollbild → kein QR');
+  }
+  return markers;
+}
+
+// ─── MARKER DETAIL UI
+function renderQRResults(markers){
+  const ids=['KS0','KS1','KS2','KS3'],labels=['Oben Links','Oben Rechts','Unten Rechts','Unten Links'];
+  const container=document.getElementById('qrResults');container.innerHTML='';
+  let found=0;
+  ids.forEach((id,i)=>{
+    const m=markers[id];
+    if(m){
+      found++;
+      const l=m.loc;
+      const div=document.createElement('div');div.className='qr-found';
+      div.innerHTML=`
+        <h4>✓ ${id} &mdash; ${labels[i]}</h4>
+        <div>Mittelpunkt: <strong>cx=${m.cx.toFixed(1)}, cy=${m.cy.toFixed(1)}</strong></div>
+        <div class="coord-grid">
+          <div class="coord"><span>topLeft</span><br>x=${l.topLeftCorner.x.toFixed(1)} y=${l.topLeftCorner.y.toFixed(1)}</div>
+          <div class="coord"><span>topRight</span><br>x=${l.topRightCorner.x.toFixed(1)} y=${l.topRightCorner.y.toFixed(1)}</div>
+          <div class="coord"><span>bottomRight</span><br>x=${l.bottomRightCorner.x.toFixed(1)} y=${l.bottomRightCorner.y.toFixed(1)}</div>
+          <div class="coord"><span>bottomLeft</span><br>x=${l.bottomLeftCorner.x.toFixed(1)} y=${l.bottomLeftCorner.y.toFixed(1)}</div>
+        </div>`;
+      container.appendChild(div);
+    } else {
+      const div=document.createElement('div');div.className='qr-missing';
+      div.textContent=`✗ ${id} (${labels[i]}) — nicht erkannt`;
+      container.appendChild(div);
+    }
+  });
+  document.getElementById('qrCount').textContent=found+'/4';
+  document.getElementById('panelQR').classList.remove('hidden');
+  return found;
+}
+
+// ─── SNAPSHOT OVERLAY: Marker-Punkte auf Snapshot zeichnen
+function drawSnapOverlay(snapCtx, markers, W, H, displayW, displayH){
+  const oc=document.getElementById('snapOverlay');
+  oc.width=displayW;oc.height=displayH;
+  const ctx=oc.getContext('2d');
+  ctx.clearRect(0,0,displayW,displayH);
+  const sx=displayW/W, sy=displayH/H;
+  const ids=['KS0','KS1','KS2','KS3'];
+  const colors=['#CF1820','#EC6525','#AF368C','#4caf50'];
+  ids.forEach((id,i)=>{
+    const m=markers[id];
+    if(!m)return;
+    const loc=m.loc;
+    // QR-Umriss
+    ctx.beginPath();
+    ctx.moveTo(loc.topLeftCorner.x*sx,     loc.topLeftCorner.y*sy);
+    ctx.lineTo(loc.topRightCorner.x*sx,    loc.topRightCorner.y*sy);
+    ctx.lineTo(loc.bottomRightCorner.x*sx, loc.bottomRightCorner.y*sy);
+    ctx.lineTo(loc.bottomLeftCorner.x*sx,  loc.bottomLeftCorner.y*sy);
+    ctx.closePath();
+    ctx.strokeStyle=colors[i];ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle=colors[i]+'44';ctx.fill();
+    // Label
+    ctx.fillStyle=colors[i];ctx.font='bold 12px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(id, m.cx*sx, m.cy*sy);
+    // Innere Ecke highlighten (für Warp)
+    let ic;
+    if(id==='KS0')ic=loc.bottomRightCorner;
+    else if(id==='KS1')ic=loc.bottomLeftCorner;
+    else if(id==='KS2')ic=loc.topLeftCorner;
+    else ic=loc.topRightCorner;
+    ctx.beginPath();ctx.arc(ic.x*sx,ic.y*sy,5,0,Math.PI*2);
+    ctx.fillStyle='white';ctx.fill();
+    ctx.strokeStyle=colors[i];ctx.lineWidth=2;ctx.stroke();
+  });
+  // Grid-Linie zwischen inneren Ecken
+  const innerPts={
+    KS0: markers.KS0?{x:markers.KS0.loc.bottomRightCorner.x,y:markers.KS0.loc.bottomRightCorner.y}:null,
+    KS1: markers.KS1?{x:markers.KS1.loc.bottomLeftCorner.x, y:markers.KS1.loc.bottomLeftCorner.y}:null,
+    KS2: markers.KS2?{x:markers.KS2.loc.topLeftCorner.x,    y:markers.KS2.loc.topLeftCorner.y}:null,
+    KS3: markers.KS3?{x:markers.KS3.loc.topRightCorner.x,   y:markers.KS3.loc.topRightCorner.y}:null,
+  };
+  if(innerPts.KS0&&innerPts.KS1&&innerPts.KS2&&innerPts.KS3){
+    ctx.beginPath();
+    ctx.moveTo(innerPts.KS0.x*sx,innerPts.KS0.y*sy);
+    ctx.lineTo(innerPts.KS1.x*sx,innerPts.KS1.y*sy);
+    ctx.lineTo(innerPts.KS2.x*sx,innerPts.KS2.y*sy);
+    ctx.lineTo(innerPts.KS3.x*sx,innerPts.KS3.y*sy);
+    ctx.closePath();
+    ctx.strokeStyle='#EC6525';ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+  }
+}
+
+// ─── HOMOGRAPHIE
+function computeHomography(src,dst){
+  const A=[],b=[];
+  for(let i=0;i<4;i++){const[sx,sy]=[src[i][0],src[i][1]];const[dx,dy]=[dst[i][0],dst[i][1]];A.push([sx,sy,1,0,0,0,-dx*sx,-dx*sy]);b.push(dx);A.push([0,0,0,sx,sy,1,-dy*sx,-dy*sy]);b.push(dy);}
+  const h=solveLinear8x8(A,b);if(!h)return null;return[h[0],h[1],h[2],h[3],h[4],h[5],h[6],h[7],1];
+}
+function solveLinear8x8(A,b){
+  const n=8,M=A.map((row,i)=>[...row,b[i]]);
+  for(let col=0;col<n;col++){let maxRow=col;for(let row=col+1;row<n;row++)if(Math.abs(M[row][col])>Math.abs(M[maxRow][col]))maxRow=row;[M[col],M[maxRow]]=[M[maxRow],M[col]];if(Math.abs(M[col][col])<1e-10)return null;for(let row=col+1;row<n;row++){const f=M[row][col]/M[col][col];for(let k=col;k<=n;k++)M[row][k]-=f*M[col][k];}}
+  const x=new Array(n).fill(0);for(let i=n-1;i>=0;i--){x[i]=M[i][n]/M[i][i];for(let k=i-1;k>=0;k--)M[k][n]-=M[k][i]*x[i];}return x;
+}
+function invertHomography(H){
+  const[a,b,c,d,e,f,g,h,ii]=[H[0],H[1],H[2],H[3],H[4],H[5],H[6],H[7],H[8]];
+  const det=a*(e*ii-f*h)-b*(d*ii-f*g)+c*(d*h-e*g);if(Math.abs(det)<1e-10)return null;
+  return[(e*ii-f*h)/det,(c*h-b*ii)/det,(b*f-c*e)/det,(f*g-d*ii)/det,(a*ii-c*g)/det,(c*d-a*f)/det,(d*h-e*g)/det,(b*g-a*h)/det,(a*e-b*d)/det];
+}
+function innerCorner(marker,id){
+  const loc=marker.loc;
+  if(id==='KS0')return[loc.bottomRightCorner.x,loc.bottomRightCorner.y];
+  if(id==='KS1')return[loc.bottomLeftCorner.x,loc.bottomLeftCorner.y];
+  if(id==='KS2')return[loc.topLeftCorner.x,loc.topLeftCorner.y];
+  if(id==='KS3')return[loc.topRightCorner.x,loc.topRightCorner.y];
+}
+
+// ─── WARP
+function warpImage(snapCanvas, markers){
+  const S=400,VW=640,VH=480;
+  const src=[innerCorner(markers['KS0'],'KS0'),innerCorner(markers['KS1'],'KS1'),innerCorner(markers['KS2'],'KS2'),innerCorner(markers['KS3'],'KS3')];
+  log('WARP','info',`Src-Punkte: TL(${src[0].map(v=>v.toFixed(0))}) TR(${src[1].map(v=>v.toFixed(0))}) BR(${src[2].map(v=>v.toFixed(0))}) BL(${src[3].map(v=>v.toFixed(0))})`);
+  const dst=[[0,0],[S,0],[S,S],[0,S]];
+  const H=computeHomography(src,dst);
+  if(!H){log('WARP','err','Homographie fehlgeschlagen!');return null;}
+  const Hinv=invertHomography(H);
+  if(!Hinv){log('WARP','err','Invertierung fehlgeschlagen!');return null;}
+  log('WARP','ok','Homographie berechnet');
+  const srcImg=snapCanvas.getContext('2d').getImageData(0,0,VW,VH);
+  const wc=document.getElementById('warpCanvas');wc.width=S;wc.height=S;
+  const wctx=wc.getContext('2d');const dstImg=wctx.createImageData(S,S);
+  for(let dy=0;dy<S;dy++)for(let dx=0;dx<S;dx++){
+    const denom=Hinv[6]*dx+Hinv[7]*dy+Hinv[8];
+    const sx=Math.round((Hinv[0]*dx+Hinv[1]*dy+Hinv[2])/denom);
+    const sy=Math.round((Hinv[3]*dx+Hinv[4]*dy+Hinv[5])/denom);
+    if(sx>=0&&sx<VW&&sy>=0&&sy<VH){const si=(sy*VW+sx)*4,di=(dy*S+dx)*4;dstImg.data[di]=srcImg.data[si];dstImg.data[di+1]=srcImg.data[si+1];dstImg.data[di+2]=srcImg.data[si+2];dstImg.data[di+3]=255;}
+  }
+  wctx.putImageData(dstImg,0,0);
+  log('WARP','ok','Warp abgeschlossen');
+  return wc;
+}
+
+// ─── ANALYSE
+function analyzeSource(src, label){
+  const G=5,S=300;const off=document.createElement('canvas');off.width=S;off.height=S;
+  off.getContext('2d').drawImage(src,0,0,S,S);const d=off.getContext('2d').getImageData(0,0,S,S).data;
+  log('GRID','info',`Analyse auf: ${label}`);
+  const cw=S/G,ch=S/G;
+  return Array.from({length:G},(_,row)=>Array.from({length:G},(_,col)=>{
+    const[r,g,b]=medianRGB(d,Math.floor(col*cw),Math.floor(row*ch),Math.floor(cw),Math.floor(ch),S);
+    const[hh,s,l]=rgbToHsl(r,g,b);
+    return{row,col,r,g,b,h:hh,s,l,cat:classify(hh,s,l)};
+  })).flat();
+}
+
+// ─── HSL TABELLE
+function renderHSL(cells){
+  const tb=document.getElementById('hslBody');tb.innerHTML='';
+  cells.forEach(c=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${String.fromCharCode(65+c.row)}${c.col+1}</td>
+      <td>${c.h}°</td><td>${c.s}%</td><td>${c.l}%</td>
+      <td>${c.r}</td><td>${c.g}</td><td>${c.b}</td>
+      <td><span class="swatch" style="background:${c.cat.color}"></span>${c.cat.emoji} ${c.cat.name}</td>
+      <td style="color:${c.cat.score>=0?'#4caf50':'#CF1820'};font-weight:700">${c.cat.score>0?'+':''}${c.cat.score}</td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('panelHSL').classList.remove('hidden');
+}
+
+// ─── SCORE
+function renderScore(cells){
+  const raw=cells.reduce((s,c)=>s+c.cat.score,0);
+  const n=cells.length,mx=n*4,mn=n*-4;
+  const norm=Math.round(((raw-mn)/(mx-mn))*200-100);
+  const pct=(norm+100)/200*100;
+  let label,col;
+  if(norm>=50){label='Sehr kühlend 🟢';col='#5a9e3a';}
+  else if(norm>=20){label='Kühlend 🟡';col='#8aba3a';}
+  else if(norm>=-10){label='Neutral ⚪';col='#888580';}
+  else if(norm>=-40){label='Wärmend 🟠';col='#EC6525';}
+  else{label='Stark wärmend 🔴';col='#CF1820';}
+  document.getElementById('bigScore').textContent=norm;
+  document.getElementById('bigScore').style.color=col;
+  document.getElementById('scoreLabel').textContent=label;
+  const bar=document.getElementById('scoreBar');
+  bar.style.width=pct+'%';bar.style.background=`linear-gradient(90deg,#CF1820,${col})`;bar.textContent=norm;
+  document.getElementById('panelScore').classList.remove('hidden');
+  log('SCORE','ok',`Raw=${raw} Norm=${norm} → ${label}`);
+}
+
+// ─── STATE
+let stream=null;
+
+async function startCam(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:960}},audio:false});
+    const v=document.getElementById('videoEl');v.srcObject=stream;v.style.display='block';
+    document.getElementById('camInfo').textContent='Kamera aktiv — Modell auf Tisch, QR-Marker an Ecken ausrichten, dann Snapshot.';
+    document.getElementById('btnStart').classList.add('hidden');
+    document.getElementById('btnSnap').classList.remove('hidden');
+    document.getElementById('btnReset').classList.remove('hidden');
+    // Track-Info
+    const track=stream.getVideoTracks()[0];
+    const settings=track.getSettings();
+    log('CAM','ok',`Kamera: ${settings.width}×${settings.height} @ ${(settings.frameRate||'?').toFixed(0)}fps`);
+  }catch(e){
+    log('CAM','err','Kamera-Fehler: '+e.message);
+    alert('Kamera nicht verfügbar. GitHub Pages (HTTPS) nötig.');
+  }
+}
+
+function doSnapshot(){
+  const video=document.getElementById('videoEl');
+  if(video.readyState<2){log('SNAP','err','Video nicht bereit');return;}
+  log('SNAP','info','Snapshot wird aufgenommen...');
+
+  // 1. Snapshot auf Canvas
+  const sc=document.getElementById('snapCanvas');
+  const ctx=sc.getContext('2d');
+  ctx.drawImage(video,0,0,640,480);
+  const imgData=ctx.getImageData(0,0,640,480);
+  log('SNAP','ok','Snapshot 640x480 aufgenommen');
+
+  // 2. QR Scan
+  log('SCAN','info','Starte QR-Scan (4 Quadranten + Vollbild)...');
+  const markers=detectMarkers(ctx,imgData);
+  const found=Object.keys(markers).length;
+  log('SCAN',found===4?'ok':found>0?'warn':'err',`${found}/4 Marker erkannt`);
+
+  // 3. Overlay auf Snapshot
+  const wrap=document.getElementById('previewWrap');
+  drawSnapOverlay(ctx, markers, 640, 480, wrap.clientWidth, wrap.clientHeight);
+
+  // 4. QR Detail
+  renderQRResults(markers);
+
+  // 5. Canvas Previews
+  document.getElementById('panelCanvas').classList.remove('hidden');
+  const wp=document.getElementById('warpPreview');
+
+  let analysisSource, markerMode=false;
+  if(found===4){
+    const warped=warpImage(sc, markers);
+    if(warped){
+      wp.getContext('2d').drawImage(warped,0,0,400,400);
+      document.getElementById('warpLabel').textContent='Warp-Output ✓ (400×400)';
+      analysisSource=warped;markerMode=true;
+    } else {
+      wp.getContext('2d').fillStyle='#2a0000';wp.getContext('2d').fillRect(0,0,400,400);
+      wp.getContext('2d').fillStyle='#e05050';wp.getContext('2d').font='14px monospace';wp.getContext('2d').fillText('Warp fehlgeschlagen',20,200);
+      document.getElementById('warpLabel').textContent='Warp FEHLER';
+      analysisSource=sc;
+    }
+  } else {
+    wp.getContext('2d').fillStyle='#111';wp.getContext('2d').fillRect(0,0,400,400);
+    wp.getContext('2d').fillStyle='#555';wp.getContext('2d').font='12px monospace';wp.getContext('2d').fillText(`Nicht genug Marker (${found}/4)`,20,200);
+    document.getElementById('warpLabel').textContent=`Warp — ${found}/4 Marker`;
+    analysisSource=sc;
+    log('WARP','warn',`Warp übersprungen (${found}/4 Marker) — Fallback auf Vollbild`);
+  }
+
+  // 6. Analyse
+  const cells=analyzeSource(analysisSource, markerMode?'Warp-Canvas (400x400)':'Snapshot-Fallback (640x480)');
+  renderHSL(cells);
+  renderScore(cells);
+
+  // Snapshot einfrieren (Video stoppen)
+  video.pause();
+  log('SNAP','info','Video pausiert — Analyse abgeschlossen.');
+}
+
+function resetAll(){
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  const v=document.getElementById('videoEl');v.srcObject=null;v.style.display='none';v.load();
+  document.getElementById('snapCanvas').getContext('2d').clearRect(0,0,640,480);
+  document.getElementById('warpPreview').getContext('2d').clearRect(0,0,400,400);
+  document.getElementById('snapOverlay').getContext('2d').clearRect(0,0,9999,9999);
+  document.getElementById('logEl').innerHTML='';
+  ['panelLog','panelQR','panelCanvas','panelHSL','panelScore'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('btnStart').classList.remove('hidden');
+  document.getElementById('btnSnap').classList.add('hidden');
+  document.getElementById('btnReset').classList.add('hidden');
+  document.getElementById('camInfo').textContent='';
+}
+</script>
+</body>
+</html>
